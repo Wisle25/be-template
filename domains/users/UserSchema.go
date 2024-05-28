@@ -1,6 +1,5 @@
 package users
 
-// Payload needed to register a user
 type RegisterUserPayload struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -13,3 +12,8 @@ type RegisterUserResponse struct {
 	Email    string `json:"email"`
 }
 
+type User struct {
+	Id       string
+	Username string
+	Email    string
+}

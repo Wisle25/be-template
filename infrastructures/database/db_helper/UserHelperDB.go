@@ -1,4 +1,4 @@
-package db_test
+package db_helper
 
 import (
 	"github.com/wisle25/be-template/domains/users"
@@ -14,6 +14,13 @@ func AddUserDB(payload *users.RegisterUserPayload) {
 		payload.Password,
 		payload.Email,
 	)
+}
+
+func GetUsers() []users.User {
+	query := "SELECT id FROM users"
+	row := database.DB.QueryRow(query)
+
+	return database.GetTableDB[users.User](row)
 }
 
 func CleanUserDB() {

@@ -68,7 +68,7 @@ func ConnectDB(config *commons.Config) {
 }
 
 // GetTableDB parses SQL query results into a slice of the specified type T.
-func GetTableDB[T any](rows *sql.Rows) []T {
+func GetTableDB[T any](rows *sql.Row) []T {
 	var table []T
 
 	// Iterate through the rows returned by the query.
