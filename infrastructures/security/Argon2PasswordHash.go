@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
-// Using argon2 for password hashing
+// Argon2PasswordHash Using argon2 for password hashing
 type Argon2PasswordHash struct /* implements PasswordHash */ {
 	Time    uint32
 	Memory  uint32
@@ -19,15 +19,15 @@ type Argon2PasswordHash struct /* implements PasswordHash */ {
 
 func NewArgon2() *Argon2PasswordHash {
 	return &Argon2PasswordHash{
-		Time: 3,
-		Memory: 64 * 1024,
+		Time:    3,
+		Memory:  64 * 1024,
 		Threads: 2,
 		SaltLen: 16,
-		KeyLen: 32,
+		KeyLen:  32,
 	}
 }
 
-// 
+// Hash the password
 func (a *Argon2PasswordHash) Hash(password string) string {
 	salt, err := a.GenerateSalt()
 	if err != nil {
@@ -63,7 +63,7 @@ func (a *Argon2PasswordHash) GenerateSalt() ([]byte, error) {
 // 	}
 
 // 	otherHash := argon2.IDKey([]byte(password), salt, c.Time, c.Memory, c.Threads, c.KeyLen)
-	
+
 // 	return subtle.ConstantTimeCompare(hash, otherHash) == 1
 // }
 

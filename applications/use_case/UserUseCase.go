@@ -2,25 +2,25 @@ package use_case
 
 import (
 	"github.com/wisle25/be-template/applications/security"
-	"github.com/wisle25/be-template/applications/validator"
+	"github.com/wisle25/be-template/applications/validation"
 	"github.com/wisle25/be-template/domains/users"
 )
 
 type UserUseCase struct {
 	userRepository users.UserRepository
 	passwordHash   security.PasswordHash
-	validator      validator.ValidateUser
+	validator      validation.ValidateUser
 }
 
 func NewAddUserUseCase(
 	userRepository users.UserRepository,
 	passwordHash security.PasswordHash,
-	validator validator.ValidateUser,
+	validator validation.ValidateUser,
 ) *UserUseCase {
 	return &UserUseCase{
 		userRepository: userRepository,
 		passwordHash:   passwordHash,
-		validator: validator,
+		validator:      validator,
 	}
 }
 

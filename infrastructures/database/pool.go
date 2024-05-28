@@ -1,4 +1,4 @@
-package infrastructures
+package database
 
 import (
 	"context"
