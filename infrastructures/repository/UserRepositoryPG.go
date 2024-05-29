@@ -15,7 +15,7 @@ type UserRepositoryPG struct {
 
 func NewUserRepositoryPG(db *sql.DB, idGenerator generator.IdGenerator) *UserRepositoryPG {
 	return &UserRepositoryPG{
-		db: db,
+		db:          db,
 		idGenerator: idGenerator,
 	}
 }
@@ -49,7 +49,7 @@ func (r *UserRepositoryPG) AddUser(payload *users.RegisterUserPayload) string {
 
 func (r *UserRepositoryPG) VerifyUsername(username string) {
 	// Query
-	query 	    := "SELECT id FROM users WHERE username = $1"
+	query := "SELECT id, username, email FROM users WHERE username = $1"
 	result, err := r.db.Query(query, username)
 
 	if err != nil {
@@ -57,8 +57,9 @@ func (r *UserRepositoryPG) VerifyUsername(username string) {
 	}
 
 	rows := database.GetTableDB[users.User](result)
+	fmt.Printf("Rows len: %d\n", len(rows))
 
 	if len(rows) > 0 {
-		panic(fmt.Errorf("Username is already on use!"))
+		panic(fmt.Errorf("username is already in use"))
 	}
 }

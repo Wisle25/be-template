@@ -1,19 +1,25 @@
 package db_helper
 
 import (
+	"github.com/google/uuid"
 	"github.com/wisle25/be-template/domains/users"
 	"github.com/wisle25/be-template/infrastructures/database"
 )
 
 func AddUserDB(payload *users.RegisterUserPayload) {
+	id, _ := uuid.NewV7()
 	query := "INSERT INTO users(id, username, password, email) VALUES ($1, $2, $3, $4)"
-	_, _ = database.DB.Exec(
+	_, err := database.DB.Exec(
 		query,
-		"user-123",
+		id,
 		payload.Username,
 		payload.Password,
 		payload.Email,
 	)
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func GetUsers() []users.User {
@@ -24,5 +30,5 @@ func GetUsers() []users.User {
 }
 
 func CleanUserDB() {
-	_, _ = database.DB.Exec("TRUNCATE TABLE users")
+	_, _ = database.DB.Query("TRUNCATE TABLE users")
 }

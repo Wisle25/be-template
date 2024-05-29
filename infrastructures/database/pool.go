@@ -87,11 +87,17 @@ func GetTableDB[T any](rows *sql.Rows) []T {
 
 		// Scan the row into the struct fields.
 		if err := rows.Scan(columns...); err != nil {
-			fmt.Println("Case Read Error ", err)
+			fmt.Println("Error scanning row: ", err)
+			return nil // Return nil if there is an error
 		}
 
 		// Append the struct to the table slice.
 		table = append(table, data)
+	}
+
+	if err := rows.Err(); err != nil {
+		fmt.Println("Error reading rows: ", err)
+		return nil // Return nil if there is an error
 	}
 
 	return table

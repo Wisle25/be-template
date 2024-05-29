@@ -8,11 +8,14 @@ import (
 	"github.com/wisle25/be-template/infrastructures/database/db_helper"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/repository"
+	"path/filepath"
 	"testing"
 )
 
 func PrepareRepositoryTest() {
-	commons.LoadConfig("../../.")
+	rootPath, _ := filepath.Abs("../../")
+
+	commons.LoadConfig(rootPath)
 	database.ConnectDB(commons.Cfg)
 }
 
@@ -39,7 +42,7 @@ func TestVerifyUsername(t *testing.T) {
 		userRepositoryPG := repository.NewUserRepositoryPG(database.DB, uuidGenerator)
 
 		// Assert
-		assert.PanicsWithError(t, "Username is not available!", func() {
+		assert.PanicsWithError(t, "username is already in use", func() {
 			userRepositoryPG.VerifyUsername("uname")
 		})
 	})
