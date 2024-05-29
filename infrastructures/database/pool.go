@@ -67,6 +67,10 @@ func ConnectDB(config *commons.Config) {
 	fmt.Println("Successfully connected to Postgres!")
 }
 
+func ProvideDB() *sql.DB {
+	return DB
+}
+
 // GetTableDB parses SQL query results into a slice of the specified type T.
 func GetTableDB[T any](rows *sql.Rows) []T {
 	var table []T
