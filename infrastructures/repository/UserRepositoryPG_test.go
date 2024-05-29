@@ -75,13 +75,13 @@ func TestAddUser(t *testing.T) {
 		userRepositoryPG := repository.NewUserRepositoryPG(database.DB, uuidGenerator)
 
 		// Action
-		response := userRepositoryPG.AddUser(payload)
+		responseId := userRepositoryPG.AddUser(payload)
 		usersList := db_helper.GetUsers()
 
 		// Assert
-		assert.NotNil(t, response.Id, "Id shouldn't be nil!")
-		assert.Equal(t, payload.Username, response.Username, "Username should be equal!")
-		assert.Equal(t, payload.Email, response.Email, "Email should be equal!")
+		assert.NotNil(t, responseId, "Id shouldn't be nil!")
+		assert.Equal(t, payload.Username, usersList[0].Username, "Username should be equal!")
+		assert.Equal(t, payload.Email, usersList[0].Email, "Email should be equal!")
 		assert.Equal(t, len(usersList), 1)
 	})
 }

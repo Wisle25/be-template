@@ -24,7 +24,7 @@ func NewAddUserUseCase(
 	}
 }
 
-func (uc *UserUseCase) Execute(payload *users.RegisterUserPayload) *users.RegisterUserResponse {
+func (uc *UserUseCase) ExecuteAdd(payload *users.RegisterUserPayload) string {
 	uc.validator.ValidatePayload(payload)
 
 	uc.userRepository.VerifyUsername(payload.Username)

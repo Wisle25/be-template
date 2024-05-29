@@ -1,6 +1,6 @@
 package users
 
 type UserRepository interface {
-	AddUser(payload *RegisterUserPayload) *RegisterUserResponse
+	AddUser(payload *RegisterUserPayload) string
 	VerifyUsername(username string)
 }

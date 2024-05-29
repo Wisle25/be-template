@@ -17,10 +17,10 @@ func AddUserDB(payload *users.RegisterUserPayload) {
 }
 
 func GetUsers() []users.User {
-	query := "SELECT id FROM users"
-	row := database.DB.QueryRow(query)
+	query := "SELECT id, username, email FROM users"
+	rows, _ := database.DB.Query(query)
 
-	return database.GetTableDB[users.User](row)
+	return database.GetTableDB[users.User](rows)
 }
 
 func CleanUserDB() {
