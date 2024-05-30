@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/wisle25/be-template/commons"
+	"github.com/wisle25/be-template/infrastructures/server"
+)
 
 func main() {
-	fmt.Printf("Hello World!")
+	config := commons.LoadConfig(".")
+	app := server.CreateServer(config)
+	
+	_ = app.Listen(fmt.Sprintf(":%s", config.ServerPort))
 }

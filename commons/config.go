@@ -6,8 +6,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var Cfg *Config
-
 type Config struct {
 	// Database
 	DBHost         string `mapstructure:"POSTGRES_HOST"`
@@ -35,7 +33,9 @@ type Config struct {
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 }
 
-func LoadConfig(path string) {
+func LoadConfig(path string) *Config {
+	config := new(Config)
+
 	viper.AddConfigPath(path)
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
@@ -47,8 +47,10 @@ func LoadConfig(path string) {
 		panic(err)
 	}
 
-	err = viper.Unmarshal(&Cfg)
+	err = viper.Unmarshal(config)
 	if err != nil {
 		panic(err)
 	}
+
+	return config
 }

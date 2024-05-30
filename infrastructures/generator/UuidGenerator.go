@@ -1,11 +1,14 @@
 ﻿package generator
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+	"github.com/wisle25/be-template/applications/generator"
+)
 
 type UUIDGenerator struct {
 }
 
-func NewUUIDGenerator() *UUIDGenerator {
+func NewUUIDGenerator() generator.IdGenerator {
 	return &UUIDGenerator{}
 }
 

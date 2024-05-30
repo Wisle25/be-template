@@ -15,8 +15,8 @@ import (
 func PrepareRepositoryTest() {
 	rootPath, _ := filepath.Abs("../../")
 
-	commons.LoadConfig(rootPath)
-	database.ConnectDB(commons.Cfg)
+	config := commons.LoadConfig(rootPath)
+	database.ConnectDB(config)
 }
 
 func DisconnectDB() {
@@ -42,7 +42,7 @@ func TestVerifyUsername(t *testing.T) {
 		userRepositoryPG := repository.NewUserRepositoryPG(database.DB, uuidGenerator)
 
 		// Assert
-		assert.PanicsWithError(t, "username is already in use", func() {
+		assert.PanicsWithError(t, "Username is already in use!", func() {
 			userRepositoryPG.VerifyUsername("uname")
 		})
 	})

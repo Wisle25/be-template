@@ -2,6 +2,7 @@ package validation
 
 import (
 	"errors"
+	"fmt"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	"reflect"
@@ -14,7 +15,7 @@ func fieldValue(payload interface{}, field string) interface{} {
 	return f.Interface()
 }
 
-func translateError(err error, trans ut.Translator) string {
+func translateError(field string, err error, trans ut.Translator) string {
 	if err == nil {
 		return ""
 	}
@@ -26,7 +27,7 @@ func translateError(err error, trans ut.Translator) string {
 	for _, e := range validatorErrors {
 		translated := e.Translate(trans)
 
-		messages = append(messages, translated)
+		messages = append(messages, fmt.Sprintf("%s%s", field, translated))
 	}
 
 	return strings.Join(messages, ";")

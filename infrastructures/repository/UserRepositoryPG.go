@@ -2,7 +2,7 @@ package repository
 
 import (
 	"database/sql"
-	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/domains/users"
 	"github.com/wisle25/be-template/infrastructures/database"
@@ -13,7 +13,7 @@ type UserRepositoryPG struct {
 	idGenerator generator.IdGenerator
 }
 
-func NewUserRepositoryPG(db *sql.DB, idGenerator generator.IdGenerator) *UserRepositoryPG {
+func NewUserRepositoryPG(db *sql.DB, idGenerator generator.IdGenerator) users.UserRepository {
 	return &UserRepositoryPG{
 		db:          db,
 		idGenerator: idGenerator,
@@ -57,9 +57,8 @@ func (r *UserRepositoryPG) VerifyUsername(username string) {
 	}
 
 	rows := database.GetTableDB[users.User](result)
-	fmt.Printf("Rows len: %d\n", len(rows))
 
 	if len(rows) > 0 {
-		panic(fmt.Errorf("username is already in use"))
+		panic(fiber.NewError(fiber.StatusConflict, "Username is already in use!"))
 	}
 }

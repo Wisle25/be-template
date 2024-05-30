@@ -1,12 +1,11 @@
 //go:build wireinject
 // +build wireinject
 
-package injector
+package container
 
 import (
 	"github.com/google/wire"
 	"github.com/wisle25/be-template/applications/use_case"
-	"github.com/wisle25/be-template/domains/users"
 	"github.com/wisle25/be-template/infrastructures/database"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/repository"
@@ -14,16 +13,17 @@ import (
 	"github.com/wisle25/be-template/infrastructures/validation"
 )
 
-func NewUserContainer() *users.UserRepository {
+func NewUserContainer() *use_case.UserUseCase {
 	// Repository
 	wire.Build(
 		repository.NewUserRepositoryPG,
 		database.ProvideDB,
 		generator.NewUUIDGenerator,
-		use_case.NewAddUserUseCase,
 		security.NewArgon2,
 		validation.NewValidateUser,
 		validation.NewValidator,
+		validation.NewValidatorTranslator,
+		use_case.NewAddUserUseCase,
 	)
 
 	return nil

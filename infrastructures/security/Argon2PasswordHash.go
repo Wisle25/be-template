@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"github.com/wisle25/be-template/applications/security"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -17,7 +18,7 @@ type Argon2PasswordHash struct /* implements PasswordHash */ {
 	SaltLen uint32
 }
 
-func NewArgon2() *Argon2PasswordHash {
+func NewArgon2() security.PasswordHash {
 	return &Argon2PasswordHash{
 		Time:    3,
 		Memory:  64 * 1024,
