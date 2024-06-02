@@ -10,10 +10,11 @@ import (
 	"github.com/wisle25/be-template/infrastructures/server"
 	"io"
 	"net/http"
-
 	"net/http/httptest"
 	"testing"
 )
+
+var refreshTokenCookie string
 
 func TestAddUser(t *testing.T) {
 	config := commons.LoadConfig("../../")
@@ -76,11 +77,53 @@ func TestLoginUser(t *testing.T) {
 
 	res, _ := app.Test(req)
 
+	// Save cookie for refresh token test
+	for _, cookie := range res.Cookies() {
+		if cookie.Name == "refresh_token" {
+			refreshTokenCookie = cookie.Value
+		}
+	}
+
 	// Assert
 	resBody, _ := io.ReadAll(res.Body)
 	var resMap map[string]string
 	_ = json.Unmarshal(resBody, &resMap)
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, resMap["message"], "Successfully logged in!")
+	assert.Equal(t, resMap["status"], "success")
+	assert.NotEmpty(t, refreshTokenCookie)
+}
+
+func TestRefreshToken(t *testing.T) {
+	config := commons.LoadConfig("../../")
+	db := database.ConnectDB(config)
+	userHelperDB := &db_helper.UserHelperDB{
+		DB: db,
+	}
+
+	defer userHelperDB.CleanUserDB()
+
+	app := server.CreateServer(config)
+
+	// Action
+	req := httptest.NewRequest(
+		"PUT",
+		"/auths",
+		nil,
+	)
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{
+		Name:  "refresh_token",
+		Value: refreshTokenCookie,
+	})
+
+	res, _ := app.Test(req)
+
+	// Assert
+	resBody, _ := io.ReadAll(res.Body)
+	var resMap map[string]string
+	_ = json.Unmarshal(resBody, &resMap)
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+	assert.Equal(t, resMap["status"], "success")
 }

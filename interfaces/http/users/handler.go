@@ -69,3 +69,24 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		"message": "Successfully logged in!",
 	})
 }
+
+func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
+	refreshToken := c.Cookies("refresh_token")
+
+	accessTokenDetail := h.useCase.ExecuteRefreshToken(refreshToken)
+
+	// Insert the tokens to cookies
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    accessTokenDetail.Token,
+		Path:     "/",
+		MaxAge:   accessTokenDetail.MaxAge,
+		Secure:   true,
+		HTTPOnly: true,
+		Domain:   "localhost",
+	})
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+	})
+}

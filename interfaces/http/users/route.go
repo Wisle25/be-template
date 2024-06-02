@@ -10,4 +10,5 @@ func NewUserRouter(app *fiber.App, useCase *use_case.UserUseCase) {
 
 	app.Post("/users", userHandler.AddUser)
 	app.Post("/auths", userHandler.Login)
+	app.Put("/auths", userHandler.RefreshToken)
 }

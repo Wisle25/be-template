@@ -65,3 +65,17 @@ func (uc *UserUseCase) ExecuteLogin(payload *users.LoginUserPayload) (*tokens.To
 
 	return accessTokenDetail, refreshTokenDetail
 }
+
+func (uc *UserUseCase) ExecuteRefreshToken(payload string) *tokens.TokenDetail {
+	// Verify
+	tokenClaims := uc.token.ValidateToken(payload, uc.config.RefreshTokenPublicKey)
+	userId := uc.cache.GetCache(tokenClaims.TokenID).(string)
+
+	// Re-create access token
+	now := time.Now()
+
+	accessTokenDetail := uc.token.CreateToken(userId, uc.config.AccessTokenExpiresIn, uc.config.AccessTokenPrivateKey)
+	uc.cache.SetCache(accessTokenDetail.TokenID, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
+
+	return accessTokenDetail
+}

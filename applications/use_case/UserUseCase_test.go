@@ -177,3 +177,51 @@ func TestUserUseCase_ExecuteLogin(t *testing.T) {
 	mockToken.AssertExpectations(t)
 	mockCache.AssertExpectations(t)
 }
+
+func TestNewUserUseCase_ExecuteRefreshToken(t *testing.T) {
+	// Arrange
+	mockToken := new(MockToken)
+	mockCache := new(MockCache)
+	mockConfig := &commons.Config{
+		AccessTokenExpiresIn:  time.Hour,
+		AccessTokenPrivateKey: "any",
+		RefreshTokenPublicKey: "any",
+	}
+
+	userUseCase := use_case.NewUserUseCase(
+		&MockUserRepository{},
+		&MockPasswordHash{},
+		&MockValidateUser{},
+		mockConfig,
+		mockToken,
+		mockCache,
+	)
+
+	refreshToken := "refresh_token123"
+
+	accessTokenDetail := &tokens.TokenDetail{
+		TokenID:   "access_token_id",
+		ExpiresIn: time.Now().Add(time.Hour).Unix(),
+		UserID:    "userid123",
+		Token:     "access_token",
+	}
+	refreshTokenDetail := &tokens.TokenDetail{
+		TokenID:   "refresh_token_id",
+		ExpiresIn: time.Now().Add(time.Hour * 24).Unix(),
+		UserID:    "userid123",
+		Token:     "refresh_token",
+	}
+
+	mockToken.On("ValidateToken", refreshToken, mockConfig.RefreshTokenPublicKey).Return(refreshTokenDetail)
+	mockCache.On("GetCache", refreshTokenDetail.TokenID).Return(refreshTokenDetail.UserID)
+	mockToken.On("CreateToken", refreshTokenDetail.UserID, mockConfig.AccessTokenExpiresIn, mockConfig.AccessTokenPrivateKey).Return(accessTokenDetail)
+	mockCache.On("SetCache", accessTokenDetail.TokenID, refreshTokenDetail.UserID, mock.Anything).Return(nil)
+
+	// Action
+	accessTokenResponse := userUseCase.ExecuteRefreshToken(refreshToken)
+
+	// Assert
+	assert.Equal(t, accessTokenDetail, accessTokenResponse)
+	mockToken.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
+}
