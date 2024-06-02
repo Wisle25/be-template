@@ -20,5 +20,17 @@ func NewValidatorTranslator(validate *validator.Validate) ut.Translator {
 	trans, _ := uni.GetTranslator("en")
 	_ = en2.RegisterDefaultTranslations(validate, trans)
 
+	// Overriding "eq" translation
+	err := validate.RegisterTranslation("eq", trans, func(ut ut.Translator) error {
+		return ut.Add("eq", "{0} doesn't match!", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("eq", fe.Field())
+
+		return t
+	})
+	if err != nil {
+		panic(err)
+	}
+
 	return trans
 }

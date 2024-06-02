@@ -26,3 +26,46 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 		"data":   returnedId,
 	})
 }
+
+func (h *UserHandler) Login(c *fiber.Ctx) error {
+	var payload users.LoginUserPayload
+	_ = c.BodyParser(&payload)
+	accessTokenDetail, refreshTokenDetail := h.useCase.ExecuteLogin(&payload)
+
+	// Insert the tokens to cookies
+	c.Cookie(&fiber.Cookie{
+		Name:     "access_token",
+		Value:    accessTokenDetail.Token,
+		Path:     "/",
+		MaxAge:   accessTokenDetail.MaxAge,
+		Secure:   true,
+		HTTPOnly: true,
+		Domain:   "localhost",
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshTokenDetail.Token,
+		Path:     "/",
+		MaxAge:   accessTokenDetail.MaxAge,
+		Secure:   true,
+		HTTPOnly: true,
+		Domain:   "localhost",
+	})
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "logged_in",
+		Value:    "true",
+		Path:     "/",
+		MaxAge:   accessTokenDetail.MaxAge,
+		Secure:   false,
+		HTTPOnly: false,
+		Domain:   "localhost",
+	})
+
+	// ...
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Successfully logged in!",
+	})
+}

@@ -1,13 +1,15 @@
 package commons
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/spf13/viper"
 )
 
+// Config holds the configuration values for the application.
 type Config struct {
-	// Database
+	// Database configuration
 	DBHost         string `mapstructure:"POSTGRES_HOST"`
 	DBUserName     string `mapstructure:"POSTGRES_USER"`
 	DBUserPassword string `mapstructure:"POSTGRES_PASSWORD"`
@@ -16,12 +18,12 @@ type Config struct {
 	DBPort         string `mapstructure:"POSTGRES_PORT"`
 	RedisURL       string `mapstructure:"REDIS_URL"`
 
-	// Server
+	// Server configuration
 	AppEnv       string `mapstructure:"APP_ENV"`
 	ServerPort   string `mapstructure:"PORT"`
 	ClientOrigin string `mapstructure:"CLIENT_ORIGIN"`
 
-	// JWT Tokens
+	// JWT Tokens configuration
 	AccessTokenPrivateKey string        `mapstructure:"ACCESS_TOKEN_PRIVATE_KEY"`
 	AccessTokenPublicKey  string        `mapstructure:"ACCESS_TOKEN_PUBLIC_KEY"`
 	AccessTokenExpiresIn  time.Duration `mapstructure:"ACCESS_TOKEN_EXPIRED_IN"`
@@ -33,24 +35,32 @@ type Config struct {
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 }
 
+var config *Config
+
+// LoadConfig loads configuration from the specified path.
+// It reads environment variables and populates the Config struct.
+// Returns the loaded config and an error if any.
 func LoadConfig(path string) *Config {
-	config := new(Config)
+	var err error
 
 	viper.AddConfigPath(path)
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
 
-	// Read the .env
-	err := viper.ReadInConfig()
+	// Read the .env file
+	err = viper.ReadInConfig()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("load_config_err: %v", err))
 	}
 
-	err = viper.Unmarshal(config)
+	// Unmarshal the config into the Config struct
+	var cfg Config
+	err = viper.Unmarshal(&cfg)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("load_config_err: %v", err))
 	}
 
+	config = &cfg
 	return config
 }

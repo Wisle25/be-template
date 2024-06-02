@@ -4,8 +4,11 @@
 package container
 
 import (
+	"database/sql"
 	"github.com/google/wire"
+	"github.com/redis/go-redis/v9"
 	"github.com/wisle25/be-template/applications/use_case"
+	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/infrastructures/database"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/repository"
@@ -13,17 +16,18 @@ import (
 	"github.com/wisle25/be-template/infrastructures/validation"
 )
 
-func NewUserContainer() *use_case.UserUseCase {
+func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) *use_case.UserUseCase {
 	// Repository
 	wire.Build(
 		repository.NewUserRepositoryPG,
-		database.ProvideDB,
+		database.NewRedisCache,
 		generator.NewUUIDGenerator,
 		security.NewArgon2,
 		validation.NewValidateUser,
 		validation.NewValidator,
 		validation.NewValidatorTranslator,
-		use_case.NewAddUserUseCase,
+		security.NewJwtToken,
+		use_case.NewUserUseCase,
 	)
 
 	return nil

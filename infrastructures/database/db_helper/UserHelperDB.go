@@ -1,15 +1,20 @@
 package db_helper
 
 import (
+	"database/sql"
 	"github.com/google/uuid"
 	"github.com/wisle25/be-template/domains/users"
 	"github.com/wisle25/be-template/infrastructures/database"
 )
 
-func AddUserDB(payload *users.RegisterUserPayload) {
+type UserHelperDB struct {
+	DB *sql.DB
+}
+
+func (h *UserHelperDB) AddUserDB(payload *users.RegisterUserPayload) {
 	id, _ := uuid.NewV7()
 	query := "INSERT INTO users(id, username, password, email) VALUES ($1, $2, $3, $4)"
-	_, err := database.DB.Exec(
+	_, err := h.DB.Exec(
 		query,
 		id,
 		payload.Username,
@@ -22,13 +27,13 @@ func AddUserDB(payload *users.RegisterUserPayload) {
 	}
 }
 
-func GetUsers() []users.User {
+func (h *UserHelperDB) GetUsers() []users.User {
 	query := "SELECT id, username, email FROM users"
-	rows, _ := database.DB.Query(query)
+	rows, _ := h.DB.Query(query)
 
 	return database.GetTableDB[users.User](rows)
 }
 
-func CleanUserDB() {
-	_, _ = database.DB.Query("TRUNCATE TABLE users")
+func (h *UserHelperDB) CleanUserDB() {
+	_, _ = h.DB.Query("TRUNCATE TABLE users")
 }

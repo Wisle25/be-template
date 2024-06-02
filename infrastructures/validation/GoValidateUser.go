@@ -4,7 +4,6 @@ import (
 	"fmt"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/validation"
 )
 
@@ -20,7 +19,7 @@ func NewValidateUser(validator *validator.Validate, trans ut.Translator) validat
 	}
 }
 
-func (v *GoValidateUser) ValidatePayload(s interface{}) {
+func (v *GoValidateUser) ValidateRegisterPayload(s interface{}) {
 	schema := map[string]string{
 		"Username":        "required,min=3,max=50,alphanum",
 		"Password":        "required,min=8",
@@ -28,17 +27,14 @@ func (v *GoValidateUser) ValidatePayload(s interface{}) {
 		"ConfirmPassword": "required,min=8," + fmt.Sprintf("eq=%s", fieldValue(s, "Password")),
 	}
 
-	for field, rule := range schema {
-		value := fieldValue(s, field)
+	validate(s, schema, v)
+}
 
-		if err := v.validator.Var(value, rule); err != nil {
-			translatedErr := translateError(field, err, v.trans)
-
-			if field == "ConfirmPassword" {
-				translatedErr = "Confirm Password doesn't match!"
-			}
-
-			panic(fiber.NewError(fiber.StatusBadRequest, translatedErr))
-		}
+func (v *GoValidateUser) ValidateLoginPayload(s interface{}) {
+	schema := map[string]string{
+		"Identity": "required,min=3,max=50",
+		"Password": "required,min=8",
 	}
+
+	validate(s, schema, v)
 }

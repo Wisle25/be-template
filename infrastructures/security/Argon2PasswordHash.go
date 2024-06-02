@@ -2,9 +2,12 @@ package security
 
 import (
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/security"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -51,52 +54,55 @@ func (a *Argon2PasswordHash) GenerateSalt() ([]byte, error) {
 
 	_, err := rand.Read(secret)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("argon2_generate_salt_err: %v", err)
 	}
 
 	return secret, nil
 }
 
-// func ComparePassword(password, hashedPassword string) bool {
-// 	c, salt, hash, err := DecodeHash(hashedPassword)
-// 	if err != nil {
-// 		panic(err)
-// 	}
+func (a *Argon2PasswordHash) Compare(password string, hashedPassword string) {
+	c, salt, hash, err := decodeHash(hashedPassword)
+	if err != nil {
+		panic(err)
+	}
 
-// 	otherHash := argon2.IDKey([]byte(password), salt, c.Time, c.Memory, c.Threads, c.KeyLen)
+	otherHash := argon2.IDKey([]byte(password), salt, c.Time, c.Memory, c.Threads, c.KeyLen)
 
-// 	return subtle.ConstantTimeCompare(hash, otherHash) == 1
-// }
+	match := subtle.ConstantTimeCompare(hash, otherHash) == 1
+	if !match {
+		panic(fiber.NewError(fiber.StatusUnauthorized, "Password is incorrect!"))
+	}
+}
 
-// func DecodeHash(hashedPassword string) (c *Argon2Hash, salt, hash []byte, err error) {
-// 	vals := strings.Split(hashedPassword, "$")
-// 	if len(vals) != 6 {
-// 		return nil, nil, nil, errors.New("password is not in the correct format")
-// 	}
+func decodeHash(hashedPassword string) (c *Argon2PasswordHash, salt, hash []byte, err error) {
+	vals := strings.Split(hashedPassword, "$")
+	if len(vals) != 6 {
+		return nil, nil, nil, fmt.Errorf("decode_hash_err: password is not in the correct format")
+	}
 
-// 	var version int
-// 	_, err = fmt.Sscanf(vals[2], "v=%d", &version)
-// 	if err != nil || version != argon2.Version {
-// 		return nil, nil, nil, err
-// 	}
+	var version int
+	_, err = fmt.Sscanf(vals[2], "v=%d", &version)
+	if err != nil || version != argon2.Version {
+		return nil, nil, nil, fmt.Errorf("decode_hash_err: %v", err)
+	}
 
-// 	c = &Argon2Hash{}
-// 	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &c.Memory, &c.Time, &c.Threads)
-// 	if err != nil {
-// 		return nil, nil, nil, err
-// 	}
+	c = &Argon2PasswordHash{}
+	_, err = fmt.Sscanf(vals[3], "m=%d,t=%d,p=%d", &c.Memory, &c.Time, &c.Threads)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("decode_hash_err: %v", err)
+	}
 
-// 	salt, err = base64.RawStdEncoding.Strict().DecodeString(vals[4])
-// 	if err != nil {
-// 		return nil, nil, nil, err
-// 	}
-// 	c.SaltLen = uint32(len(salt))
+	salt, err = base64.RawStdEncoding.Strict().DecodeString(vals[4])
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("decode_hash_err: %v", err)
+	}
+	c.SaltLen = uint32(len(salt))
 
-// 	hash, err = base64.RawStdEncoding.Strict().DecodeString(vals[5])
-// 	if err != nil {
-// 		return nil, nil, nil, err
-// 	}
-// 	c.KeyLen = uint32(len(hash))
+	hash, err = base64.RawStdEncoding.Strict().DecodeString(vals[5])
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("decode_hash_err: %v", err)
+	}
+	c.KeyLen = uint32(len(hash))
 
-// 	return c, salt, hash, nil
-// }
+	return c, salt, hash, nil
+}

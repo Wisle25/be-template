@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/wisle25/be-template/commons"
+	"github.com/wisle25/be-template/infrastructures/container"
 	"github.com/wisle25/be-template/infrastructures/database"
 	"github.com/wisle25/be-template/interfaces/http/users"
 )
@@ -32,8 +33,8 @@ func errorHandling(c *fiber.Ctx, err error) error {
 
 func CreateServer(config *commons.Config) *fiber.App {
 	// Load Utils
-	database.ConnectDB(config)
-	database.ConnectRedis(config)
+	db := database.ConnectDB(config)
+	redis := database.ConnectRedis(config)
 
 	// Server
 	app := fiber.New(fiber.Config{
@@ -50,8 +51,10 @@ func CreateServer(config *commons.Config) *fiber.App {
 		AllowCredentials: true,
 	}))
 
-	// Routes
-	users.NewUserRouter(app)
+	// User and Auth
+	userUseCase := container.NewUserContainer(config, db, redis)
+
+	users.NewUserRouter(app, userUseCase)
 
 	return app
 }

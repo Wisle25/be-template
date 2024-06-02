@@ -1,10 +1,12 @@
 ﻿package generator
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"github.com/wisle25/be-template/applications/generator"
 )
 
+// UUIDGenerator implements IdGenerator using UUID
 type UUIDGenerator struct {
 }
 
@@ -15,7 +17,7 @@ func NewUUIDGenerator() generator.IdGenerator {
 func (generator *UUIDGenerator) Generate() string {
 	id, err := uuid.NewV7()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("id_generator_err: %v", err))
 	}
 
 	return id.String()

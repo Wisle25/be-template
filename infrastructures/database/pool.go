@@ -1,40 +1,16 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
 
 	_ "github.com/lib/pq"
-	"github.com/redis/go-redis/v9"
 	"github.com/wisle25/be-template/commons"
 )
 
-var (
-	RedisClient *redis.Client
-	ctx         context.Context
-	DB          *sql.DB
-)
-
-// ConnectRedis initializes a connection to the Redis server using the provided configuration.
-func ConnectRedis(config *commons.Config) {
-	ctx = context.TODO()
-
-	RedisClient = redis.NewClient(&redis.Options{
-		Addr: config.RedisURL,
-	})
-
-	// Ping the Redis server to ensure the connection is established.
-	if _, err := RedisClient.Ping(ctx).Result(); err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Successfully connected to Redis Client")
-}
-
 // ConnectDB initializes a connection to the PostgreSQL database using the provided configuration.
-func ConnectDB(config *commons.Config) {
+func ConnectDB(config *commons.Config) *sql.DB {
 	var err error
 	dbName := config.DBName
 
@@ -54,20 +30,18 @@ func ConnectDB(config *commons.Config) {
 	)
 
 	// Open a connection to the database.
-	DB, err = sql.Open("postgres", dsn)
+	DB, err := sql.Open("postgres", dsn)
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("connect_DB_err: Opening: %v", err))
 	}
 
 	// Ping the database to ensure the connection is established.
 	if err = DB.Ping(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("connect_DB_err: Pinging: %v", err))
 	}
 
 	fmt.Println("Successfully connected to Postgres!")
-}
 
-func ProvideDB() *sql.DB {
 	return DB
 }
 
