@@ -73,7 +73,7 @@ func (jt *JwtToken) ValidateToken(token string, publicKey string) *tokens.TokenD
 	if token == "" {
 		panic(fiber.NewError(
 			fiber.StatusUnauthorized,
-			"Token is invalid! You might be not signed in!",
+			"Session is invalid! You might be not signed in!",
 		))
 	}
 

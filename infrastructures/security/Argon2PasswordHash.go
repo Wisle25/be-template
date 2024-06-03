@@ -19,28 +19,32 @@ type Argon2PasswordHash struct /* implements PasswordHash */ {
 	Threads uint8
 	KeyLen  uint32
 	SaltLen uint32
+	Salt    []byte
 }
 
 func NewArgon2() security.PasswordHash {
-	return &Argon2PasswordHash{
+	argon2Hash := &Argon2PasswordHash{
 		Time:    3,
 		Memory:  64 * 1024,
 		Threads: 2,
 		SaltLen: 16,
 		KeyLen:  32,
+		Salt:    make([]byte, 16),
 	}
+	salt, err := argon2Hash.GenerateSalt()
+	if err != nil {
+		panic(err)
+	}
+	argon2Hash.Salt = salt
+
+	return argon2Hash
 }
 
 // Hash the password
 func (a *Argon2PasswordHash) Hash(password string) string {
-	salt, err := a.GenerateSalt()
-	if err != nil {
-		panic(err)
-	}
+	hash := argon2.IDKey([]byte(password), a.Salt, a.Time, a.Memory, a.Threads, a.KeyLen)
 
-	hash := argon2.IDKey([]byte(password), salt, a.Time, a.Memory, a.Threads, a.KeyLen)
-
-	b64Salt := base64.RawStdEncoding.EncodeToString(salt)
+	b64Salt := base64.RawStdEncoding.EncodeToString(a.Salt)
 	b64Hash := base64.RawStdEncoding.EncodeToString(hash)
 
 	// Return a string using the standard encoded hash representation.

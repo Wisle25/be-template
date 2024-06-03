@@ -38,6 +38,14 @@ func TestRedisCache(t *testing.T) {
 	})
 
 	t.Run("GetCache", func(t *testing.T) {
+		t.Run("Should return nil when value is not found", func(t *testing.T) {
+			// Act
+			result := redisCache.GetCache("non-exists-key")
+
+			// Assert
+			assert.Nil(t, result)
+		})
+
 		t.Run("should get a value from Redis", func(t *testing.T) {
 			// Arrange
 			key := "test-key"
@@ -49,6 +57,22 @@ func TestRedisCache(t *testing.T) {
 
 			// Assert
 			assert.Equal(t, expectedValue, result)
+		})
+	})
+
+	t.Run("DelCache", func(t *testing.T) {
+		t.Run("should delete a value in Redis", func(t *testing.T) {
+			// Arrange
+			key := "test-key"
+			value := "test-value"
+
+			redis.Set(ctx, key, value, time.Minute)
+
+			// Act
+			redisCache.DeleteCache(key)
+
+			// Assert
+			assert.Nil(t, redisCache.GetCache(key))
 		})
 	})
 }

@@ -85,27 +85,21 @@ func TestUserRepository(t *testing.T) {
 		defer userHelperDb.CleanUserDB()
 
 		t.Run("Should get user by email", func(t *testing.T) {
-			// Arrange
-
 			// Action
-			response, password := userRepositoryPG.GetUserByIdentity("hand@gmail.com")
+			userId, password := userRepositoryPG.GetUserByIdentity("hand@gmail.com")
 
 			// Assert
-			assert.NotNil(t, response)
+			assert.NotNil(t, userId)
 			assert.NotNil(t, password)
-			assert.Equal(t, response.Username, payload.Username)
-			assert.Equal(t, response.Email, payload.Email)
 		})
 
 		t.Run("Should get user by username", func(t *testing.T) {
 			// Action
-			response, password := userRepositoryPG.GetUserByIdentity("uname")
+			userId, password := userRepositoryPG.GetUserByIdentity("uname")
 
 			// Assert
-			assert.NotNil(t, response)
+			assert.NotNil(t, userId)
 			assert.NotNil(t, password)
-			assert.Equal(t, response.Username, payload.Username)
-			assert.Equal(t, response.Email, payload.Email)
 		})
 
 		t.Run("Should raise panic if user is not existed", func(t *testing.T) {

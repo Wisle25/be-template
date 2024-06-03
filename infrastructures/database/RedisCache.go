@@ -2,6 +2,7 @@
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"github.com/wisle25/be-template/applications/database"
@@ -33,8 +34,20 @@ func (r *RedisCache) GetCache(key string) interface{} {
 	val, err := r.redis.Get(ctx, key).Result()
 
 	if err != nil {
-		panic(fmt.Errorf("redis_cache_err: %v", err))
+		if errors.Is(err, redis.Nil) {
+			return nil
+		} else {
+			panic(fmt.Errorf("redis_cache_err: get cache: %v", err))
+		}
 	}
 
 	return val
+}
+
+func (r *RedisCache) DeleteCache(key string) {
+	ctx := context.TODO()
+	err := r.redis.Del(ctx, key).Err()
+	if err != nil {
+		panic(fmt.Errorf("redis_cache_err: delete cache: %v", err))
+	}
 }

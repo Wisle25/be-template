@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/domains/users"
+	"time"
 )
 
 type UserHandler struct {
@@ -17,10 +18,12 @@ func NewUserHandler(useCase *use_case.UserUseCase) *UserHandler {
 }
 
 func (h *UserHandler) AddUser(c *fiber.Ctx) error {
+	// Use Case
 	var payload users.RegisterUserPayload
 	_ = c.BodyParser(&payload)
 	returnedId := h.useCase.ExecuteAdd(&payload)
 
+	// Response
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status": "success",
 		"data":   returnedId,
@@ -28,6 +31,7 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) Login(c *fiber.Ctx) error {
+	// Use Case
 	var payload users.LoginUserPayload
 	_ = c.BodyParser(&payload)
 	accessTokenDetail, refreshTokenDetail := h.useCase.ExecuteLogin(&payload)
@@ -63,7 +67,7 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		Domain:   "localhost",
 	})
 
-	// ...
+	// Response
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Successfully logged in!",
@@ -71,6 +75,7 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
+	// Use Case
 	refreshToken := c.Cookies("refresh_token")
 
 	accessTokenDetail := h.useCase.ExecuteRefreshToken(refreshToken)
@@ -86,7 +91,40 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 		Domain:   "localhost",
 	})
 
+	// Response
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
+	})
+}
+
+func (h *UserHandler) Logout(c *fiber.Ctx) error {
+	// Use Case
+	refreshToken := c.Cookies("refresh_token")
+	accessTokenId := c.Locals("access_token_id").(string)
+
+	h.useCase.ExecuteLogout(refreshToken, accessTokenId)
+	// Remove from cookie
+	expiredTime := time.Now().Add(-time.Hour * 24)
+
+	c.Cookie(&fiber.Cookie{
+		Name:    "access_token",
+		Value:   "",
+		Expires: expiredTime,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:    "refresh_token",
+		Value:   "",
+		Expires: expiredTime,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:    "logged_in",
+		Value:   "",
+		Expires: expiredTime,
+	})
+
+	// Response
+	return c.Status(200).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Successfully logged out!",
 	})
 }

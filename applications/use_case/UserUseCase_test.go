@@ -27,9 +27,9 @@ func (m *MockUserRepository) VerifyUsername(username string) {
 	m.Called(username)
 }
 
-func (m *MockUserRepository) GetUserByIdentity(identity string) (*users.User, string) {
+func (m *MockUserRepository) GetUserByIdentity(identity string) (string, string) {
 	args := m.Called(identity)
-	return args.Get(0).(*users.User), args.String(1)
+	return args.String(0), args.String(1)
 }
 
 type MockPasswordHash struct {
@@ -82,6 +82,10 @@ func (m *MockCache) SetCache(key string, value interface{}, expiration time.Dura
 func (m *MockCache) GetCache(key string) interface{} {
 	args := m.Called(key)
 	return args.Get(0)
+}
+
+func (m *MockCache) DeleteCache(key string) {
+	m.Called(key)
 }
 
 func TestUserUseCase_ExecuteAdd(t *testing.T) {
@@ -157,7 +161,7 @@ func TestUserUseCase_ExecuteLogin(t *testing.T) {
 	}
 
 	mockValidator.On("ValidateLoginPayload", payload).Return(nil)
-	mockUserRepo.On("GetUserByIdentity", payload.Identity).Return(user, "hashedpassword")
+	mockUserRepo.On("GetUserByIdentity", payload.Identity).Return(user.Id, "hashedpassword")
 	mockPasswordHash.On("Compare", payload.Password, "hashedpassword").Return(nil)
 	mockToken.On("CreateToken", user.Id, mockConfig.AccessTokenExpiresIn, mockConfig.AccessTokenPrivateKey).Return(accessTokenDetail)
 	mockToken.On("CreateToken", user.Id, mockConfig.RefreshTokenExpiresIn, mockConfig.RefreshTokenPrivateKey).Return(refreshTokenDetail)
@@ -178,7 +182,7 @@ func TestUserUseCase_ExecuteLogin(t *testing.T) {
 	mockCache.AssertExpectations(t)
 }
 
-func TestNewUserUseCase_ExecuteRefreshToken(t *testing.T) {
+func TestUserUseCase_ExecuteRefreshToken(t *testing.T) {
 	// Arrange
 	mockToken := new(MockToken)
 	mockCache := new(MockCache)
@@ -197,7 +201,7 @@ func TestNewUserUseCase_ExecuteRefreshToken(t *testing.T) {
 		mockCache,
 	)
 
-	refreshToken := "refresh_token123"
+	refreshTokenCookie := "refresh_token123"
 
 	accessTokenDetail := &tokens.TokenDetail{
 		TokenID:   "access_token_id",
@@ -212,16 +216,87 @@ func TestNewUserUseCase_ExecuteRefreshToken(t *testing.T) {
 		Token:     "refresh_token",
 	}
 
-	mockToken.On("ValidateToken", refreshToken, mockConfig.RefreshTokenPublicKey).Return(refreshTokenDetail)
+	mockToken.On("ValidateToken", refreshTokenCookie, mockConfig.RefreshTokenPublicKey).Return(refreshTokenDetail)
 	mockCache.On("GetCache", refreshTokenDetail.TokenID).Return(refreshTokenDetail.UserID)
 	mockToken.On("CreateToken", refreshTokenDetail.UserID, mockConfig.AccessTokenExpiresIn, mockConfig.AccessTokenPrivateKey).Return(accessTokenDetail)
 	mockCache.On("SetCache", accessTokenDetail.TokenID, refreshTokenDetail.UserID, mock.Anything).Return(nil)
 
 	// Action
-	accessTokenResponse := userUseCase.ExecuteRefreshToken(refreshToken)
+	accessTokenResponse := userUseCase.ExecuteRefreshToken(refreshTokenCookie)
 
 	// Assert
 	assert.Equal(t, accessTokenDetail, accessTokenResponse)
+	mockToken.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
+}
+
+func TestUserUseCase_ExecuteLogout(t *testing.T) {
+	// Arrange
+	refreshTokenCookie := "refresh_token123"
+	accessTokenId := "access_token123"
+
+	refreshTokenDetail := &tokens.TokenDetail{
+		TokenID: "refresh_token123",
+	}
+
+	mockConfig := &commons.Config{
+		RefreshTokenPublicKey: "any",
+	}
+	mockToken := new(MockToken)
+	mockCache := new(MockCache)
+
+	mockToken.On("ValidateToken", refreshTokenCookie, mockConfig.RefreshTokenPublicKey).Return(refreshTokenDetail)
+	mockCache.On("DeleteCache", refreshTokenDetail.TokenID).Return(nil).Once()
+	mockCache.On("DeleteCache", accessTokenId).Return(nil).Once()
+
+	userUseCase := use_case.NewUserUseCase(
+		&MockUserRepository{},
+		&MockPasswordHash{},
+		&MockValidateUser{},
+		mockConfig,
+		mockToken,
+		mockCache,
+	)
+
+	// Action
+	userUseCase.ExecuteLogout(refreshTokenCookie, accessTokenId)
+
+	// Assert
+	mockToken.AssertExpectations(t)
+	mockCache.AssertExpectations(t)
+}
+
+func TestUseUseCase_ExecuteGuard(t *testing.T) {
+	// Arrange
+	accessToken := "access_token123"
+	accessTokenDetail := &tokens.TokenDetail{
+		TokenID: "access_token123",
+		UserID:  "userid123",
+	}
+
+	mockToken := new(MockToken)
+	mockCache := new(MockCache)
+	mockConfig := &commons.Config{
+		RefreshTokenPublicKey: "any",
+	}
+
+	mockToken.On("ValidateToken", accessToken, mockConfig.AccessTokenPublicKey).Return(accessTokenDetail)
+	mockCache.On("GetCache", accessTokenDetail.TokenID).Return(accessTokenDetail.UserID)
+
+	userUseCase := use_case.NewUserUseCase(
+		&MockUserRepository{},
+		&MockPasswordHash{},
+		&MockValidateUser{},
+		mockConfig,
+		mockToken,
+		mockCache,
+	)
+
+	// Action
+	userIdCache, tokenDetail := userUseCase.ExecuteGuard(accessToken)
+
+	assert.NotNil(t, userIdCache)
+	assert.Equal(t, accessTokenDetail, tokenDetail)
 	mockToken.AssertExpectations(t)
 	mockCache.AssertExpectations(t)
 }

@@ -8,3 +8,4 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE UNIQUE INDEX users_email_idx ON users(email);
+CREATE UNIQUE INDEX users_username_idx ON users(username);

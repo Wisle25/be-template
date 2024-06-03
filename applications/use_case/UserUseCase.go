@@ -53,22 +53,22 @@ func (uc *UserUseCase) ExecuteAdd(payload *users.RegisterUserPayload) string {
 func (uc *UserUseCase) ExecuteLogin(payload *users.LoginUserPayload) (*tokens.TokenDetail, *tokens.TokenDetail) {
 	uc.validator.ValidateLoginPayload(payload)
 
-	user, encryptedPassword := uc.userRepository.GetUserByIdentity(payload.Identity)
+	userId, encryptedPassword := uc.userRepository.GetUserByIdentity(payload.Identity)
 	uc.passwordHash.Compare(payload.Password, encryptedPassword)
 
-	accessTokenDetail := uc.token.CreateToken(user.Id, uc.config.AccessTokenExpiresIn, uc.config.AccessTokenPrivateKey)
-	refreshTokenDetail := uc.token.CreateToken(user.Id, uc.config.RefreshTokenExpiresIn, uc.config.RefreshTokenPrivateKey)
+	accessTokenDetail := uc.token.CreateToken(userId, uc.config.AccessTokenExpiresIn, uc.config.AccessTokenPrivateKey)
+	refreshTokenDetail := uc.token.CreateToken(userId, uc.config.RefreshTokenExpiresIn, uc.config.RefreshTokenPrivateKey)
 
 	now := time.Now()
-	uc.cache.SetCache(accessTokenDetail.TokenID, user.Id, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
-	uc.cache.SetCache(refreshTokenDetail.TokenID, user.Id, time.Unix(refreshTokenDetail.ExpiresIn, 0).Sub(now))
+	uc.cache.SetCache(accessTokenDetail.TokenID, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
+	uc.cache.SetCache(refreshTokenDetail.TokenID, userId, time.Unix(refreshTokenDetail.ExpiresIn, 0).Sub(now))
 
 	return accessTokenDetail, refreshTokenDetail
 }
 
-func (uc *UserUseCase) ExecuteRefreshToken(payload string) *tokens.TokenDetail {
+func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *tokens.TokenDetail {
 	// Verify
-	tokenClaims := uc.token.ValidateToken(payload, uc.config.RefreshTokenPublicKey)
+	tokenClaims := uc.token.ValidateToken(currentRefreshToken, uc.config.RefreshTokenPublicKey)
 	userId := uc.cache.GetCache(tokenClaims.TokenID).(string)
 
 	// Re-create access token
@@ -78,4 +78,19 @@ func (uc *UserUseCase) ExecuteRefreshToken(payload string) *tokens.TokenDetail {
 	uc.cache.SetCache(accessTokenDetail.TokenID, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
 
 	return accessTokenDetail
+}
+
+func (uc *UserUseCase) ExecuteLogout(refreshToken string, accessTokenId string) {
+	// Verify
+	refreshTokenClaims := uc.token.ValidateToken(refreshToken, uc.config.RefreshTokenPublicKey)
+
+	// Remove from cache
+	uc.cache.DeleteCache(refreshTokenClaims.TokenID)
+	uc.cache.DeleteCache(accessTokenId)
+}
+
+func (uc *UserUseCase) ExecuteGuard(accessToken string) (interface{}, *tokens.TokenDetail) {
+	accessTokenDetail := uc.token.ValidateToken(accessToken, uc.config.AccessTokenPublicKey)
+
+	return uc.cache.GetCache(accessTokenDetail.TokenID), accessTokenDetail
 }

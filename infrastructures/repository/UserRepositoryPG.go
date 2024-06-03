@@ -7,7 +7,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/domains/users"
-	"github.com/wisle25/be-template/infrastructures/database"
 )
 
 type UserRepositoryPG struct {
@@ -43,44 +42,46 @@ func (r *UserRepositoryPG) AddUser(payload *users.RegisterUserPayload) string {
 	).Scan(&returnedId)
 
 	if err != nil {
-		panic(fmt.Errorf("user_repo_pg_error: %v", err))
+		panic(fmt.Errorf("user_repo_pg_error: add user: %v", err))
 	}
 
 	return returnedId
 }
 
 func (r *UserRepositoryPG) VerifyUsername(username string) {
+	var id string
+
 	// Query
-	query := "SELECT id, username, email FROM users WHERE username = $1"
-	result, err := r.db.Query(query, username)
+	query := "SELECT id FROM users WHERE username = $1"
+	err := r.db.QueryRow(query, username).Scan(&id)
 
 	if err != nil {
-		panic(fmt.Errorf("user_repo_pg_error: %v", err))
+		if errors.Is(err, sql.ErrNoRows) {
+			return
+		} else {
+			panic(fmt.Errorf("user_repo_pg_error: verify username: %v", err))
+		}
 	}
 
-	rows := database.GetTableDB[users.User](result)
-
-	if len(rows) > 0 {
-		panic(fiber.NewError(fiber.StatusConflict, "Username is already in use!"))
-	}
+	panic(fiber.NewError(fiber.StatusConflict, "Username is already in use!"))
 }
 
-func (r *UserRepositoryPG) GetUserByIdentity(identity string) (*users.User, string) {
-	var user users.User
+func (r *UserRepositoryPG) GetUserByIdentity(identity string) (string, string) {
+	var userId string
 	var encryptedPassword string
 
 	// Query
-	query := "SELECT id, username, email, password FROM users WHERE email = $1 OR username = $1"
-	err := r.db.QueryRow(query, identity).Scan(&user.Id, &user.Username, &user.Email, &encryptedPassword)
+	query := "SELECT id, password FROM users WHERE email = $1 OR username = $1"
+	err := r.db.QueryRow(query, identity).Scan(&userId, &encryptedPassword)
 
 	// Evaluate
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			panic(fiber.NewError(fiber.StatusNotFound, "User not found!"))
 		} else {
-			panic(fmt.Errorf("user_repo_pg_error: %v", err))
+			panic(fmt.Errorf("user_repo_pg_error: get userId by identity %v", err))
 		}
 	}
 
-	return &user, encryptedPassword
+	return userId, encryptedPassword
 }

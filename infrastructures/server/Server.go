@@ -9,6 +9,7 @@ import (
 	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/infrastructures/container"
 	"github.com/wisle25/be-template/infrastructures/database"
+	"github.com/wisle25/be-template/interfaces/http/middlewares"
 	"github.com/wisle25/be-template/interfaces/http/users"
 )
 
@@ -41,6 +42,9 @@ func CreateServer(config *commons.Config) *fiber.App {
 		ErrorHandler: errorHandling,
 	})
 
+	// Use Cases
+	userUseCase := container.NewUserContainer(config, db, redis)
+
 	// Middlewares
 	app.Use(recover.New())
 	app.Use(logger.New())
@@ -51,10 +55,11 @@ func CreateServer(config *commons.Config) *fiber.App {
 		AllowCredentials: true,
 	}))
 
-	// User and Auth
-	userUseCase := container.NewUserContainer(config, db, redis)
+	// Custom Middleware
+	jwtMiddleware := middlewares.NewJwtMiddleware(userUseCase)
 
-	users.NewUserRouter(app, userUseCase)
+	// Router
+	users.NewUserRouter(app, jwtMiddleware, userUseCase)
 
 	return app
 }

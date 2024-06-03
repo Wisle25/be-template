@@ -10,4 +10,7 @@ type Cache interface {
 
 	// GetCache retrieves a value from the cache by key.
 	GetCache(key string) interface{}
+
+	// DeleteCache removing cache
+	DeleteCache(key string)
 }
