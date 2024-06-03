@@ -18,7 +18,7 @@ import (
 	"github.com/wisle25/be-template/infrastructures/validation"
 )
 
-// Injectors from UserContainer.go:
+// Injectors from user_container.go:
 
 func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) *use_case.UserUseCase {
 	idGenerator := generator.NewUUIDGenerator()
