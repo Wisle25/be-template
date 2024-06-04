@@ -1,10 +1,10 @@
-﻿package database_test
+﻿package cache_test
 
 import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/infrastructures/database"
+	"github.com/wisle25/be-template/infrastructures/cache"
 	"testing"
 	"time"
 )
@@ -14,10 +14,10 @@ func TestRedisCache(t *testing.T) {
 	config := commons.LoadConfig("../../")
 
 	// Connect to Redis
-	redis := database.ConnectRedis(config)
+	redis := cache.ConnectRedis(config)
 
 	// Create RedisCache instance
-	redisCache := database.NewRedisCache(redis)
+	redisCache := cache.NewRedisCache(redis)
 	ctx := context.TODO()
 
 	t.Run("SetCache", func(t *testing.T) {

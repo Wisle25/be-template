@@ -2,9 +2,9 @@ package validation_test
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/wisle25/be-template/domains/entity"
 	"testing"
 
-	"github.com/wisle25/be-template/domains/users"
 	"github.com/wisle25/be-template/infrastructures/validation"
 )
 
@@ -16,7 +16,7 @@ func TestRegisterValidation(t *testing.T) {
 	t.Run("Username Validation", func(t *testing.T) {
 		t.Run("Should return error when reaches the max limit", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "awekrhnawklejrklewhjrtleksjrtklerwntklrsjgklrdjgtyklrdjgtyklrdjgkltydejrt",
 				Password:        "Helkdaoskd",
 				ConfirmPassword: "Helkdaoskd",
@@ -31,7 +31,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Should return error when username is empty", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "",
 				Password:        "Helkdaoskd",
 				ConfirmPassword: "Helkdaoskd",
@@ -46,7 +46,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Should return error when username contains illegal chars", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "AS awdawd",
 				Password:        "Helkdaoskd",
 				ConfirmPassword: "Helkdaoskd",
@@ -61,7 +61,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Shouldn't raise error when everything is met", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "mypassword",
 				ConfirmPassword: "mypassword",
@@ -78,7 +78,7 @@ func TestRegisterValidation(t *testing.T) {
 	t.Run("Password Validation", func(t *testing.T) {
 		t.Run("Should return error when password is too short", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "short",
 				ConfirmPassword: "Helkdaoskd",
@@ -93,7 +93,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Should return error when password is empty", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "",
 				ConfirmPassword: "Helkdaoskd",
@@ -108,7 +108,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Should return error when confirm password doesn't match", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "sdawdasdwd",
 				ConfirmPassword: "Helkdaoskd",
@@ -123,7 +123,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Shouldn't raise error when password is valid", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "validpassword",
 				ConfirmPassword: "validpassword",
@@ -140,7 +140,7 @@ func TestRegisterValidation(t *testing.T) {
 	t.Run("Email Validation", func(t *testing.T) {
 		t.Run("Should return error when email is invalid", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "validpassword",
 				ConfirmPassword: "validpassword",
@@ -155,7 +155,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Should return error when email is empty", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "validpassword",
 				ConfirmPassword: "validpassword",
@@ -170,7 +170,7 @@ func TestRegisterValidation(t *testing.T) {
 
 		t.Run("Shouldn't raise error when email is valid", func(t *testing.T) {
 			// Arrange
-			payload := users.RegisterUserPayload{
+			payload := entity.RegisterUserPayload{
 				Username:        "myusername",
 				Password:        "validpassword",
 				ConfirmPassword: "validpassword",
@@ -193,7 +193,7 @@ func TestLoginValidation(t *testing.T) {
 	t.Run("Identity Validation", func(t *testing.T) {
 		t.Run("Should return error when identity is empty", func(t *testing.T) {
 			// Arrange
-			payload := users.LoginUserPayload{
+			payload := entity.LoginUserPayload{
 				Identity: "",
 				Password: "anypassword",
 			}
@@ -206,7 +206,7 @@ func TestLoginValidation(t *testing.T) {
 
 		t.Run("Should return error when identity is less than 3", func(t *testing.T) {
 			// Arrange
-			payload := users.LoginUserPayload{
+			payload := entity.LoginUserPayload{
 				Identity: "sw",
 				Password: "anypassword",
 			}
@@ -219,7 +219,7 @@ func TestLoginValidation(t *testing.T) {
 
 		t.Run("Shouldn't raise error when identity is valid", func(t *testing.T) {
 			// Arrange
-			payload := users.LoginUserPayload{
+			payload := entity.LoginUserPayload{
 				Identity: "swdw",
 				Password: "anypassword",
 			}
@@ -234,7 +234,7 @@ func TestLoginValidation(t *testing.T) {
 	t.Run("Password Validation", func(t *testing.T) {
 		t.Run("Should return error when password is too short", func(t *testing.T) {
 			// Arrange
-			payload := users.LoginUserPayload{
+			payload := entity.LoginUserPayload{
 				Identity: "anyidentity",
 				Password: "short",
 			}
@@ -247,7 +247,7 @@ func TestLoginValidation(t *testing.T) {
 
 		t.Run("Should return error when password is empty", func(t *testing.T) {
 			// Arrange
-			payload := users.LoginUserPayload{
+			payload := entity.LoginUserPayload{
 				Identity: "anyidentity",
 				Password: "",
 			}
@@ -260,7 +260,7 @@ func TestLoginValidation(t *testing.T) {
 
 		t.Run("Shouldn't raise error when password is valid", func(t *testing.T) {
 			// Arrange
-			payload := users.LoginUserPayload{
+			payload := entity.LoginUserPayload{
 				Identity: "anyidentity",
 				Password: "validpassword",
 			}

@@ -1,4 +1,4 @@
-package users
+package entity
 
 type RegisterUserPayload struct {
 	Username        string `json:"username"`

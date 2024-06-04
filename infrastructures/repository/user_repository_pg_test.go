@@ -1,11 +1,11 @@
 package repository_test
 
 import (
+	"github.com/wisle25/be-template/domains/entity"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/domains/users"
 	"github.com/wisle25/be-template/infrastructures/database"
 	"github.com/wisle25/be-template/infrastructures/database/db_helper"
 	"github.com/wisle25/be-template/infrastructures/generator"
@@ -28,7 +28,7 @@ func TestUserRepository(t *testing.T) {
 			defer userHelperDb.CleanUserDB()
 
 			// Arrange
-			userHelperDb.AddUserDB(&users.RegisterUserPayload{
+			userHelperDb.AddUserDB(&entity.RegisterUserPayload{
 				Username: "uname",
 				Password: "password",
 				Email:    "hand@gmail.com",
@@ -55,7 +55,7 @@ func TestUserRepository(t *testing.T) {
 		userRepositoryPG := repository.NewUserRepositoryPG(db, uuidGenerator)
 
 		// Arrange
-		payload := &users.RegisterUserPayload{
+		payload := &entity.RegisterUserPayload{
 			Username: "uname",
 			Password: "password",
 			Email:    "hand@gmail.com",
@@ -76,7 +76,7 @@ func TestUserRepository(t *testing.T) {
 		uuidGenerator := generator.NewUUIDGenerator()
 		userRepositoryPG := repository.NewUserRepositoryPG(db, uuidGenerator)
 
-		payload := &users.RegisterUserPayload{
+		payload := &entity.RegisterUserPayload{
 			Username: "uname",
 			Password: "password",
 			Email:    "hand@gmail.com",

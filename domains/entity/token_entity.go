@@ -1,4 +1,4 @@
-﻿package tokens
+﻿package entity
 
 // TokenDetail struct represents the details of a token.
 // This struct is used to encapsulate information about a generated token, including its value, associated user, and expiration details.

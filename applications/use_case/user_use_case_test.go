@@ -2,14 +2,13 @@ package use_case_test
 
 import (
 	"github.com/wisle25/be-template/applications/use_case"
+	"github.com/wisle25/be-template/domains/entity"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/domains/tokens"
-	"github.com/wisle25/be-template/domains/users"
 )
 
 // Mocks for the dependencies
@@ -18,7 +17,7 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) AddUser(payload *users.RegisterUserPayload) string {
+func (m *MockUserRepository) AddUser(payload *entity.RegisterUserPayload) string {
 	args := m.Called(payload)
 	return args.String(0)
 }
@@ -61,14 +60,14 @@ type MockToken struct {
 	mock.Mock
 }
 
-func (m *MockToken) CreateToken(userID string, ttl time.Duration, privateKey string) *tokens.TokenDetail {
+func (m *MockToken) CreateToken(userID string, ttl time.Duration, privateKey string) *entity.TokenDetail {
 	args := m.Called(userID, ttl, privateKey)
-	return args.Get(0).(*tokens.TokenDetail)
+	return args.Get(0).(*entity.TokenDetail)
 }
 
-func (m *MockToken) ValidateToken(token string, publicKey string) *tokens.TokenDetail {
+func (m *MockToken) ValidateToken(token string, publicKey string) *entity.TokenDetail {
 	args := m.Called(token, publicKey)
-	return args.Get(0).(*tokens.TokenDetail)
+	return args.Get(0).(*entity.TokenDetail)
 }
 
 type MockCache struct {
@@ -99,7 +98,7 @@ func TestUserUseCase_ExecuteAdd(t *testing.T) {
 
 	userUseCase := use_case.NewUserUseCase(mockUserRepo, mockPasswordHash, mockValidator, mockConfig, mockToken, mockCache)
 
-	payload := &users.RegisterUserPayload{
+	payload := &entity.RegisterUserPayload{
 		Username: "testuser",
 		Password: "password123",
 		Email:    "test@example.com",
@@ -135,25 +134,25 @@ func TestUserUseCase_ExecuteLogin(t *testing.T) {
 
 	userUseCase := use_case.NewUserUseCase(mockUserRepo, mockPasswordHash, mockValidator, mockConfig, mockToken, mockCache)
 
-	payload := &users.LoginUserPayload{
+	payload := &entity.LoginUserPayload{
 		Identity: "testuser",
 		Password: "password123",
 	}
 
-	user := &users.User{
+	user := &entity.User{
 		Id:       "userid123",
 		Username: "testuser",
 		Email:    "test@example.com",
 	}
 
-	accessTokenDetail := &tokens.TokenDetail{
+	accessTokenDetail := &entity.TokenDetail{
 		TokenID:   "access_token_id",
 		ExpiresIn: time.Now().Add(time.Hour).Unix(),
 		UserID:    "userid123",
 		Token:     "access_token",
 	}
 
-	refreshTokenDetail := &tokens.TokenDetail{
+	refreshTokenDetail := &entity.TokenDetail{
 		TokenID:   "refresh_token_id",
 		ExpiresIn: time.Now().Add(time.Hour * 24).Unix(),
 		UserID:    "userid123",
@@ -203,13 +202,13 @@ func TestUserUseCase_ExecuteRefreshToken(t *testing.T) {
 
 	refreshTokenCookie := "refresh_token123"
 
-	accessTokenDetail := &tokens.TokenDetail{
+	accessTokenDetail := &entity.TokenDetail{
 		TokenID:   "access_token_id",
 		ExpiresIn: time.Now().Add(time.Hour).Unix(),
 		UserID:    "userid123",
 		Token:     "access_token",
 	}
-	refreshTokenDetail := &tokens.TokenDetail{
+	refreshTokenDetail := &entity.TokenDetail{
 		TokenID:   "refresh_token_id",
 		ExpiresIn: time.Now().Add(time.Hour * 24).Unix(),
 		UserID:    "userid123",
@@ -235,7 +234,7 @@ func TestUserUseCase_ExecuteLogout(t *testing.T) {
 	refreshTokenCookie := "refresh_token123"
 	accessTokenId := "access_token123"
 
-	refreshTokenDetail := &tokens.TokenDetail{
+	refreshTokenDetail := &entity.TokenDetail{
 		TokenID: "refresh_token123",
 	}
 
@@ -269,7 +268,7 @@ func TestUserUseCase_ExecuteLogout(t *testing.T) {
 func TestUseUseCase_ExecuteGuard(t *testing.T) {
 	// Arrange
 	accessToken := "access_token123"
-	accessTokenDetail := &tokens.TokenDetail{
+	accessTokenDetail := &entity.TokenDetail{
 		TokenID: "access_token123",
 		UserID:  "userid123",
 	}

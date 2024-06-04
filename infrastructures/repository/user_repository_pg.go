@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/generator"
-	"github.com/wisle25/be-template/domains/users"
+	"github.com/wisle25/be-template/domains/entity"
+	"github.com/wisle25/be-template/domains/repository"
 )
 
 type UserRepositoryPG struct {
@@ -14,14 +15,14 @@ type UserRepositoryPG struct {
 	idGenerator generator.IdGenerator
 }
 
-func NewUserRepositoryPG(db *sql.DB, idGenerator generator.IdGenerator) users.UserRepository {
+func NewUserRepositoryPG(db *sql.DB, idGenerator generator.IdGenerator) repository.UserRepository {
 	return &UserRepositoryPG{
 		db:          db,
 		idGenerator: idGenerator,
 	}
 }
 
-func (r *UserRepositoryPG) AddUser(payload *users.RegisterUserPayload) string {
+func (r *UserRepositoryPG) AddUser(payload *entity.RegisterUserPayload) string {
 	// Create ID
 	id := r.idGenerator.Generate()
 

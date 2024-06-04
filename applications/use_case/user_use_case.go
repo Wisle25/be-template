@@ -1,32 +1,32 @@
 package use_case
 
 import (
-	"github.com/wisle25/be-template/applications/database"
+	"github.com/wisle25/be-template/applications/cache"
 	"github.com/wisle25/be-template/applications/security"
 	"github.com/wisle25/be-template/applications/validation"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/domains/tokens"
-	"github.com/wisle25/be-template/domains/users"
+	"github.com/wisle25/be-template/domains/entity"
+	"github.com/wisle25/be-template/domains/repository"
 	"time"
 )
 
 // UserUseCase handles the business logic for user operations.
 type UserUseCase struct {
-	userRepository users.UserRepository
+	userRepository repository.UserRepository
 	passwordHash   security.PasswordHash
 	validator      validation.ValidateUser
 	config         *commons.Config
 	token          security.Token
-	cache          database.Cache
+	cache          cache.Cache
 }
 
 func NewUserUseCase(
-	userRepository users.UserRepository,
+	userRepository repository.UserRepository,
 	passwordHash security.PasswordHash,
 	validator validation.ValidateUser,
 	config *commons.Config,
 	token security.Token,
-	cache database.Cache,
+	cache cache.Cache,
 ) *UserUseCase {
 	return &UserUseCase{
 		userRepository: userRepository,
@@ -39,7 +39,7 @@ func NewUserUseCase(
 }
 
 // ExecuteAdd Handling user registration. Returning registered user's ID
-func (uc *UserUseCase) ExecuteAdd(payload *users.RegisterUserPayload) string {
+func (uc *UserUseCase) ExecuteAdd(payload *entity.RegisterUserPayload) string {
 	uc.validator.ValidateRegisterPayload(payload)
 
 	uc.userRepository.VerifyUsername(payload.Username)
@@ -50,7 +50,7 @@ func (uc *UserUseCase) ExecuteAdd(payload *users.RegisterUserPayload) string {
 
 // ExecuteLogin Handling user login. Returning user's token for authentication/authorization later.
 // Returned token must be added to the cookie
-func (uc *UserUseCase) ExecuteLogin(payload *users.LoginUserPayload) (*tokens.TokenDetail, *tokens.TokenDetail) {
+func (uc *UserUseCase) ExecuteLogin(payload *entity.LoginUserPayload) (*entity.TokenDetail, *entity.TokenDetail) {
 	uc.validator.ValidateLoginPayload(payload)
 
 	userId, encryptedPassword := uc.userRepository.GetUserByIdentity(payload.Identity)
@@ -66,7 +66,7 @@ func (uc *UserUseCase) ExecuteLogin(payload *users.LoginUserPayload) (*tokens.To
 	return accessTokenDetail, refreshTokenDetail
 }
 
-func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *tokens.TokenDetail {
+func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *entity.TokenDetail {
 	// Verify
 	tokenClaims := uc.token.ValidateToken(currentRefreshToken, uc.config.RefreshTokenPublicKey)
 	userId := uc.cache.GetCache(tokenClaims.TokenID).(string)
@@ -89,7 +89,7 @@ func (uc *UserUseCase) ExecuteLogout(refreshToken string, accessTokenId string) 
 	uc.cache.DeleteCache(accessTokenId)
 }
 
-func (uc *UserUseCase) ExecuteGuard(accessToken string) (interface{}, *tokens.TokenDetail) {
+func (uc *UserUseCase) ExecuteGuard(accessToken string) (interface{}, *entity.TokenDetail) {
 	accessTokenDetail := uc.token.ValidateToken(accessToken, uc.config.AccessTokenPublicKey)
 
 	return uc.cache.GetCache(accessTokenDetail.TokenID), accessTokenDetail

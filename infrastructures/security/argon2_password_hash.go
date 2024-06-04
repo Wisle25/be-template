@@ -20,12 +20,12 @@ func NewArgon2() security.PasswordHash {
 
 // Hash the password
 func (a *Argon2PasswordHash) Hash(password string) string {
-	encoded, err := a.argon.HashEncoded([]byte(password))
+	hashed, err := a.argon.HashEncoded([]byte(password))
 	if err != nil {
 		panic(fmt.Errorf("argon2_err: hash: %v", err))
 	}
 
-	return string(encoded)
+	return string(hashed)
 }
 
 func (a *Argon2PasswordHash) Compare(password string, hashedPassword string) {

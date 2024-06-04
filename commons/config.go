@@ -35,8 +35,6 @@ type Config struct {
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 }
 
-var config *Config
-
 // LoadConfig loads configuration from the specified path.
 // It reads environment variables and populates the Config struct.
 // Returns the loaded config and an error if any.
@@ -61,6 +59,5 @@ func LoadConfig(path string) *Config {
 		panic(fmt.Errorf("load_config_err: %v", err))
 	}
 
-	config = &cfg
-	return config
+	return &cfg
 }

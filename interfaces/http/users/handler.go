@@ -3,7 +3,7 @@
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
-	"github.com/wisle25/be-template/domains/users"
+	"github.com/wisle25/be-template/domains/entity"
 	"time"
 )
 
@@ -19,7 +19,7 @@ func NewUserHandler(useCase *use_case.UserUseCase) *UserHandler {
 
 func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 	// Use Case
-	var payload users.RegisterUserPayload
+	var payload entity.RegisterUserPayload
 	_ = c.BodyParser(&payload)
 	returnedId := h.useCase.ExecuteAdd(&payload)
 
@@ -32,7 +32,7 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 
 func (h *UserHandler) Login(c *fiber.Ctx) error {
 	// Use Case
-	var payload users.LoginUserPayload
+	var payload entity.LoginUserPayload
 	_ = c.BodyParser(&payload)
 	accessTokenDetail, refreshTokenDetail := h.useCase.ExecuteLogin(&payload)
 

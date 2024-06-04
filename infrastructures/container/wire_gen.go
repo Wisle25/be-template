@@ -11,7 +11,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/infrastructures/database"
+	"github.com/wisle25/be-template/infrastructures/cache"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/repository"
 	"github.com/wisle25/be-template/infrastructures/security"
@@ -28,7 +28,7 @@ func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) 
 	translator := validation.NewValidatorTranslator(validate)
 	validateUser := validation.NewValidateUser(validate, translator)
 	token := security.NewJwtToken(idGenerator)
-	cache := database.NewRedisCache(client)
+	cache := cache.NewRedisCache(client)
 	userUseCase := use_case.NewUserUseCase(userRepository, passwordHash, validateUser, config, token, cache)
 	return userUseCase
 }

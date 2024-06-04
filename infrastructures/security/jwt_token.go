@@ -8,7 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/applications/security"
-	"github.com/wisle25/be-template/domains/tokens"
+	"github.com/wisle25/be-template/domains/entity"
 	"time"
 )
 
@@ -26,11 +26,11 @@ func NewJwtToken(idGenerator generator.IdGenerator) security.Token {
 
 // CreateToken generates a new JWT token for a given user ID and time-to-live duration.
 // It uses the provided private key to sign the token.
-func (jt *JwtToken) CreateToken(userID string, ttl time.Duration, privateKey string) *tokens.TokenDetail {
+func (jt *JwtToken) CreateToken(userID string, ttl time.Duration, privateKey string) *entity.TokenDetail {
 	now := time.Now().UTC()
 
 	// Creating token details
-	td := &tokens.TokenDetail{
+	td := &entity.TokenDetail{
 		TokenID:   jt.idGenerator.Generate(),
 		UserID:    userID,
 		ExpiresIn: now.Add(ttl).Unix(),
@@ -69,7 +69,7 @@ func (jt *JwtToken) CreateToken(userID string, ttl time.Duration, privateKey str
 
 // ValidateToken verifies the given JWT token using the provided public key.
 // It returns the token details if the token is valid.
-func (jt *JwtToken) ValidateToken(token string, publicKey string) *tokens.TokenDetail {
+func (jt *JwtToken) ValidateToken(token string, publicKey string) *entity.TokenDetail {
 	if token == "" {
 		panic(fiber.NewError(
 			fiber.StatusUnauthorized,
@@ -109,7 +109,7 @@ func (jt *JwtToken) ValidateToken(token string, publicKey string) *tokens.TokenD
 	}
 
 	// Return the token details
-	return &tokens.TokenDetail{
+	return &entity.TokenDetail{
 		TokenID: fmt.Sprintf("%s", claims["token_id"]),
 		UserID:  fmt.Sprintf("%s", claims["sub"]),
 	}

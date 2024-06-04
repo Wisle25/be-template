@@ -1,11 +1,11 @@
-﻿package database
+﻿package cache
 
 import (
 	"context"
 	"errors"
 	"fmt"
 	"github.com/redis/go-redis/v9"
-	"github.com/wisle25/be-template/applications/database"
+	"github.com/wisle25/be-template/applications/cache"
 	"time"
 )
 
@@ -14,7 +14,7 @@ type RedisCache struct {
 	redis *redis.Client
 }
 
-func NewRedisCache(redis *redis.Client) database.Cache {
+func NewRedisCache(redis *redis.Client) cache.Cache {
 	return &RedisCache{
 		redis: redis,
 	}

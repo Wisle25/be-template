@@ -9,17 +9,17 @@ import (
 	"github.com/wisle25/be-template/commons"
 )
 
-// ConnectDB initializes a connection to the PostgreSQL database using the provided configuration.
+// ConnectDB initializes a connection to the PostgreSQL cache using the provided configuration.
 func ConnectDB(config *commons.Config) *sql.DB {
 	var err error
 	dbName := config.DBName
 
-	// Use the test database if the application environment is set to 'dev'.
+	// Use the test cache if the application environment is set to 'dev'.
 	if config.AppEnv == "dev" {
 		dbName = config.DBNameTest
 	}
 
-	// Format the data source name (DSN) string for connecting to the database.
+	// Format the data source name (DSN) string for connecting to the cache.
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
 		config.DBHost,
@@ -29,13 +29,13 @@ func ConnectDB(config *commons.Config) *sql.DB {
 		config.DBPort,
 	)
 
-	// Open a connection to the database.
+	// Open a connection to the cache.
 	DB, err := sql.Open("postgres", dsn)
 	if err != nil {
 		panic(fmt.Errorf("connect_DB_err: Opening: %v", err))
 	}
 
-	// Ping the database to ensure the connection is established.
+	// Ping the cache to ensure the connection is established.
 	if err = DB.Ping(); err != nil {
 		panic(fmt.Errorf("connect_DB_err: Pinging: %v", err))
 	}

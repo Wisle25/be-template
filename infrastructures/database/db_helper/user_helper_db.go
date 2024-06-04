@@ -3,7 +3,7 @@ package db_helper
 import (
 	"database/sql"
 	"github.com/google/uuid"
-	"github.com/wisle25/be-template/domains/users"
+	"github.com/wisle25/be-template/domains/entity"
 	"github.com/wisle25/be-template/infrastructures/database"
 )
 
@@ -11,7 +11,7 @@ type UserHelperDB struct {
 	DB *sql.DB
 }
 
-func (h *UserHelperDB) AddUserDB(payload *users.RegisterUserPayload) {
+func (h *UserHelperDB) AddUserDB(payload *entity.RegisterUserPayload) {
 	id, _ := uuid.NewV7()
 	query := "INSERT INTO users(id, username, password, email) VALUES ($1, $2, $3, $4)"
 	_, err := h.DB.Exec(
@@ -27,11 +27,11 @@ func (h *UserHelperDB) AddUserDB(payload *users.RegisterUserPayload) {
 	}
 }
 
-func (h *UserHelperDB) GetUsers() []users.User {
+func (h *UserHelperDB) GetUsers() []entity.User {
 	query := "SELECT id, username, email FROM users"
 	rows, _ := h.DB.Query(query)
 
-	return database.GetTableDB[users.User](rows)
+	return database.GetTableDB[entity.User](rows)
 }
 
 func (h *UserHelperDB) CleanUserDB() {
