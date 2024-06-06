@@ -23,12 +23,12 @@ import (
 func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) *use_case.UserUseCase {
 	idGenerator := generator.NewUUIDGenerator()
 	userRepository := repository.NewUserRepositoryPG(db, idGenerator)
-	passwordHash := security.NewBcrypt()
+	passwordHash := security.NewArgon2()
 	validate := validation.NewValidator()
 	translator := validation.NewValidatorTranslator(validate)
 	validateUser := validation.NewValidateUser(validate, translator)
 	token := security.NewJwtToken(idGenerator)
-	cache := cache.NewRedisCache(client)
-	userUseCase := use_case.NewUserUseCase(userRepository, passwordHash, validateUser, config, token, cache)
+	cacheCache := cache.NewRedisCache(client)
+	userUseCase := use_case.NewUserUseCase(userRepository, passwordHash, validateUser, config, token, cacheCache)
 	return userUseCase
 }
