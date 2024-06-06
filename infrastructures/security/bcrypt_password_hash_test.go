@@ -11,7 +11,7 @@ import (
 func TestArgon2PasswordHash_Hash(t *testing.T) {
 	t.Run("should encrypt password correctly", func(t *testing.T) {
 		// Arrange
-		argon2PasswordHash := security.NewArgon2()
+		argon2PasswordHash := security.NewBcrypt()
 		plainPassword := "plain_password"
 
 		// Act
@@ -26,7 +26,7 @@ func TestArgon2PasswordHash_Hash(t *testing.T) {
 
 func TestArgon2PasswordHash_Compare(t *testing.T) {
 	// Arrange
-	argon2PasswordHash := security.NewArgon2()
+	argon2PasswordHash := security.NewBcrypt()
 	plainPassword := "plain_password"
 
 	// Act

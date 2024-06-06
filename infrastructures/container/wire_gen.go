@@ -23,7 +23,7 @@ import (
 func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) *use_case.UserUseCase {
 	idGenerator := generator.NewUUIDGenerator()
 	userRepository := repository.NewUserRepositoryPG(db, idGenerator)
-	passwordHash := security.NewArgon2()
+	passwordHash := security.NewBcrypt()
 	validate := validation.NewValidator()
 	translator := validation.NewValidatorTranslator(validate)
 	validateUser := validation.NewValidateUser(validate, translator)

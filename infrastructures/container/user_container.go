@@ -22,7 +22,7 @@ func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) 
 		repository.NewUserRepositoryPG,
 		cache.NewRedisCache,
 		generator.NewUUIDGenerator,
-		security.NewArgon2,
+		security.NewBcrypt,
 		validation.NewValidateUser,
 		validation.NewValidator,
 		validation.NewValidatorTranslator,
