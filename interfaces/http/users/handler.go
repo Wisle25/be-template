@@ -103,6 +103,7 @@ func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	accessTokenId := c.Locals("access_token_id").(string)
 
 	h.useCase.ExecuteLogout(refreshToken, accessTokenId)
+	
 	// Remove from cookie
 	expiredTime := time.Now().Add(-time.Hour * 24)
 

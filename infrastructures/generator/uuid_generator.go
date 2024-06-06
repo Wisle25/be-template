@@ -7,7 +7,8 @@ import (
 )
 
 // UUIDGenerator implements IdGenerator using UUID
-type UUIDGenerator struct {
+type UUIDGenerator struct /* implements IdGenerator */ {
+
 }
 
 func NewUUIDGenerator() generator.IdGenerator {

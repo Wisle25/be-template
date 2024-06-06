@@ -66,6 +66,7 @@ func (uc *UserUseCase) ExecuteLogin(payload *entity.LoginUserPayload) (*entity.T
 	return accessTokenDetail, refreshTokenDetail
 }
 
+// ExecuteRefreshToken handles refreshing the access token using the provided refresh token.
 func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *entity.TokenDetail {
 	// Verify
 	tokenClaims := uc.token.ValidateToken(currentRefreshToken, uc.config.RefreshTokenPublicKey)
@@ -80,6 +81,8 @@ func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *entity.T
 	return accessTokenDetail
 }
 
+// ExecuteLogout handles user logout by removing the tokens from the cache.
+// Don't forget to remove the tokens from cookies too in infrastructure layer
 func (uc *UserUseCase) ExecuteLogout(refreshToken string, accessTokenId string) {
 	// Verify
 	refreshTokenClaims := uc.token.ValidateToken(refreshToken, uc.config.RefreshTokenPublicKey)
@@ -89,6 +92,8 @@ func (uc *UserUseCase) ExecuteLogout(refreshToken string, accessTokenId string) 
 	uc.cache.DeleteCache(accessTokenId)
 }
 
+// ExecuteGuard verifies the access token and retrieves the associated user from the cache.
+// This is used as a guard middleware for JWT authentication.
 func (uc *UserUseCase) ExecuteGuard(accessToken string) (interface{}, *entity.TokenDetail) {
 	accessTokenDetail := uc.token.ValidateToken(accessToken, uc.config.AccessTokenPublicKey)
 

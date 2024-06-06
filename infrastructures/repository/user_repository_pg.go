@@ -10,7 +10,7 @@ import (
 	"github.com/wisle25/be-template/domains/repository"
 )
 
-type UserRepositoryPG struct {
+type UserRepositoryPG struct /* implements UserRepository */ {
 	db          *sql.DB
 	idGenerator generator.IdGenerator
 }

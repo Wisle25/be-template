@@ -7,7 +7,7 @@ import (
 	"github.com/wisle25/be-template/applications/validation"
 )
 
-type GoValidateUser struct {
+type GoValidateUser struct /* implements ValidateUser */ {
 	validator *validator.Validate
 	trans     ut.Translator
 }

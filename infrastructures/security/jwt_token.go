@@ -13,7 +13,7 @@ import (
 )
 
 // JwtToken struct provides methods for creating and validating token using JWT.
-type JwtToken struct {
+type JwtToken struct /* implements Token */ {
 	idGenerator generator.IdGenerator
 }
 

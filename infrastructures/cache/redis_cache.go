@@ -10,7 +10,7 @@ import (
 )
 
 // RedisCache implements Cache
-type RedisCache struct {
+type RedisCache struct /* implements Cache */ {
 	redis *redis.Client
 }
 

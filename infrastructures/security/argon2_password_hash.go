@@ -18,7 +18,6 @@ func NewArgon2() security.PasswordHash {
 	}
 }
 
-// Hash the password
 func (a *Argon2PasswordHash) Hash(password string) string {
 	hashed, err := a.argon.HashEncoded([]byte(password))
 
