@@ -1,4 +1,4 @@
-package database
+package services
 
 import (
 	"database/sql"
@@ -15,7 +15,7 @@ func ConnectDB(config *commons.Config) *sql.DB {
 	dbName := config.DBName
 
 	// Use the test cache if the application environment is set to 'dev'.
-	if config.AppEnv == "dev" {
+	if config.AppEnv == "test" {
 		dbName = config.DBNameTest
 	}
 

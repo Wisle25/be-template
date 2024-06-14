@@ -38,46 +38,54 @@ func NewUserUseCase(
 	}
 }
 
-// ExecuteAdd Handling user registration. Returning registered user's ID
+// ExecuteAdd Handling user registration.
+// Should raise panic if violates username/email uniqueness.
+// Returning registered user's ID.
 func (uc *UserUseCase) ExecuteAdd(payload *entity.RegisterUserPayload) string {
 	uc.validator.ValidateRegisterPayload(payload)
 
-	uc.userRepository.VerifyUsername(payload.Username)
 	payload.Password = uc.passwordHash.Hash(payload.Password)
 
 	return uc.userRepository.AddUser(payload)
 }
 
 // ExecuteLogin Handling user login. Returning user's token for authentication/authorization later.
-// Returned token must be added to the cookie
+// Should raise panic if user is not existed
+// Returned tokens must be added to the HTTP cookie
 func (uc *UserUseCase) ExecuteLogin(payload *entity.LoginUserPayload) (*entity.TokenDetail, *entity.TokenDetail) {
 	uc.validator.ValidateLoginPayload(payload)
 
-	userId, encryptedPassword := uc.userRepository.GetUserByIdentity(payload.Identity)
+	// Get user information from database then compare password
+	userId, encryptedPassword := uc.userRepository.GetUserForLogin(payload.Identity)
 	uc.passwordHash.Compare(payload.Password, encryptedPassword)
 
+	// Create token
 	accessTokenDetail := uc.token.CreateToken(userId, uc.config.AccessTokenExpiresIn, uc.config.AccessTokenPrivateKey)
 	refreshTokenDetail := uc.token.CreateToken(userId, uc.config.RefreshTokenExpiresIn, uc.config.RefreshTokenPrivateKey)
 
+	// Add tokens to the cache
 	now := time.Now()
-	uc.cache.SetCache(accessTokenDetail.TokenID, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
-	uc.cache.SetCache(refreshTokenDetail.TokenID, userId, time.Unix(refreshTokenDetail.ExpiresIn, 0).Sub(now))
+	uc.cache.SetCache(accessTokenDetail.TokenId, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
+	uc.cache.SetCache(refreshTokenDetail.TokenId, userId, time.Unix(refreshTokenDetail.ExpiresIn, 0).Sub(now))
 
+	// Returned token should be added to HTTP Cookie
 	return accessTokenDetail, refreshTokenDetail
 }
 
 // ExecuteRefreshToken handles refreshing the access token using the provided refresh token.
+// Should raise panic if refresh token is invalid
+// Returned new access token should be added to HTTP Cookie
 func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *entity.TokenDetail {
-	// Verify
+	// Verify token from JWT itself and from cache
 	tokenClaims := uc.token.ValidateToken(currentRefreshToken, uc.config.RefreshTokenPublicKey)
-	userId := uc.cache.GetCache(tokenClaims.TokenID).(string)
+	userId := uc.cache.GetCache(tokenClaims.TokenId).(string)
 
-	// Re-create access token
+	// Re-create access token and re-insert to the cache
 	now := time.Now()
-
 	accessTokenDetail := uc.token.CreateToken(userId, uc.config.AccessTokenExpiresIn, uc.config.AccessTokenPrivateKey)
-	uc.cache.SetCache(accessTokenDetail.TokenID, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
+	uc.cache.SetCache(accessTokenDetail.TokenId, userId, time.Unix(accessTokenDetail.ExpiresIn, 0).Sub(now))
 
+	// Returned token should be added to HTTP Cookie
 	return accessTokenDetail
 }
 
@@ -88,14 +96,19 @@ func (uc *UserUseCase) ExecuteLogout(refreshToken string, accessTokenId string) 
 	refreshTokenClaims := uc.token.ValidateToken(refreshToken, uc.config.RefreshTokenPublicKey)
 
 	// Remove from cache
-	uc.cache.DeleteCache(refreshTokenClaims.TokenID)
+	uc.cache.DeleteCache(refreshTokenClaims.TokenId)
 	uc.cache.DeleteCache(accessTokenId)
 }
 
 // ExecuteGuard verifies the access token and retrieves the associated user from the cache.
 // This is used as a guard middleware for JWT authentication.
+// Returning userId from token's cache
 func (uc *UserUseCase) ExecuteGuard(accessToken string) (interface{}, *entity.TokenDetail) {
 	accessTokenDetail := uc.token.ValidateToken(accessToken, uc.config.AccessTokenPublicKey)
 
-	return uc.cache.GetCache(accessTokenDetail.TokenID), accessTokenDetail
+	return uc.cache.GetCache(accessTokenDetail.TokenId), accessTokenDetail
+}
+
+func (uc *UserUseCase) ExecuteGetUserById(userId string) *entity.User {
+	return uc.userRepository.GetUserById(userId)
 }

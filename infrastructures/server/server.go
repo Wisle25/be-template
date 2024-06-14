@@ -9,7 +9,8 @@ import (
 	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/infrastructures/cache"
 	"github.com/wisle25/be-template/infrastructures/container"
-	"github.com/wisle25/be-template/infrastructures/database"
+	"github.com/wisle25/be-template/infrastructures/generator"
+	"github.com/wisle25/be-template/infrastructures/services"
 	"github.com/wisle25/be-template/interfaces/http/middlewares"
 	"github.com/wisle25/be-template/interfaces/http/users"
 )
@@ -35,16 +36,13 @@ func errorHandling(c *fiber.Ctx, err error) error {
 
 func CreateServer(config *commons.Config) *fiber.App {
 	// Load Utils
-	db := database.ConnectDB(config)
-	redis := cache.ConnectRedis(config)
+	db := services.ConnectDB(config)
+	redis := services.ConnectRedis(config)
 
 	// Server
 	app := fiber.New(fiber.Config{
 		ErrorHandler: errorHandling,
 	})
-
-	// Use Cases
-	userUseCase := container.NewUserContainer(config, db, redis)
 
 	// Middlewares
 	app.Use(recover.New())
@@ -55,6 +53,14 @@ func CreateServer(config *commons.Config) *fiber.App {
 		AllowMethods:     "*",
 		AllowCredentials: true,
 	}))
+
+	// Global Dependencies
+	redisCache := cache.NewRedisCache(redis)
+	uuidGenerator := generator.NewUUIDGenerator()
+	validation := services.NewValidation()
+
+	// Use Cases
+	userUseCase := container.NewUserContainer(config, db, redisCache, uuidGenerator, validation)
 
 	// Custom Middleware
 	jwtMiddleware := middlewares.NewJwtMiddleware(userUseCase)

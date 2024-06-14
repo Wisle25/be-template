@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"github.com/google/uuid"
 	"github.com/wisle25/be-template/domains/entity"
-	"github.com/wisle25/be-template/infrastructures/database"
+	"github.com/wisle25/be-template/infrastructures/services"
 )
 
 type UserHelperDB struct {
@@ -28,10 +28,10 @@ func (h *UserHelperDB) AddUserDB(payload *entity.RegisterUserPayload) {
 }
 
 func (h *UserHelperDB) GetUsers() []entity.User {
-	query := "SELECT id, username, email FROM users"
+	query := "SELECT id, username, email, avatar_link FROM users"
 	rows, _ := h.DB.Query(query)
 
-	return database.GetTableDB[entity.User](rows)
+	return services.GetTableDB[entity.User](rows)
 }
 
 func (h *UserHelperDB) CleanUserDB() {

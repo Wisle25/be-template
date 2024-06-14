@@ -2,110 +2,88 @@ package repository_test
 
 import (
 	"github.com/wisle25/be-template/domains/entity"
+	"github.com/wisle25/be-template/infrastructures/services"
+	"github.com/wisle25/be-template/tests/db_helper"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/infrastructures/database"
-	"github.com/wisle25/be-template/infrastructures/database/db_helper"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/repository"
 )
 
 func TestUserRepository(t *testing.T) {
-	config := commons.LoadConfig("../../")
-	db := database.ConnectDB(config)
+	// Arrange
+	config := commons.LoadConfig("../..")
+	db := services.ConnectDB(config)
 	userHelperDb := &db_helper.UserHelperDB{
 		DB: db,
 	}
-	defer userHelperDb.DB.Close()
+	defer userHelperDb.CleanUserDB()
 
-	t.Run("VerifyUsername", func(t *testing.T) {
-		uuidGenerator := generator.NewUUIDGenerator()
-		userRepositoryPG := repository.NewUserRepositoryPG(db, uuidGenerator)
+	uuidGenerator := generator.NewUUIDGenerator()
+	userRepositoryPG := repository.NewUserRepositoryPG(db, uuidGenerator)
 
-		t.Run("Should raising panic when username is not available", func(t *testing.T) {
-			defer userHelperDb.CleanUserDB()
-
-			// Arrange
-			userHelperDb.AddUserDB(&entity.RegisterUserPayload{
-				Username: "uname",
-				Password: "password",
-				Email:    "hand@gmail.com",
-			})
-
-			// Action and Assert
-			assert.PanicsWithError(t, "Username is already in use!", func() {
-				userRepositoryPG.VerifyUsername("uname")
-			})
-		})
-
-		t.Run("Not raising panic when username is available", func(t *testing.T) {
-			// Action and Assert
-			assert.NotPanics(t, func() {
-				userRepositoryPG.VerifyUsername("uname")
-			})
-		})
-	})
+	// Arrange
+	payload := &entity.RegisterUserPayload{
+		Username: "uname",
+		Password: "password",
+		Email:    "hand@gmail.com",
+	}
 
 	t.Run("AddUser", func(t *testing.T) {
-		defer userHelperDb.CleanUserDB()
-
-		uuidGenerator := generator.NewUUIDGenerator()
-		userRepositoryPG := repository.NewUserRepositoryPG(db, uuidGenerator)
-
-		// Arrange
-		payload := &entity.RegisterUserPayload{
-			Username: "uname",
-			Password: "password",
-			Email:    "hand@gmail.com",
-		}
-
 		// Action
 		responseId := userRepositoryPG.AddUser(payload)
-		usersList := userHelperDb.GetUsers()
 
 		// Assert
-		assert.NotNil(t, responseId, "Id shouldn't be nil!")
-		assert.Equal(t, payload.Username, usersList[0].Username, "Username should be equal!")
-		assert.Equal(t, payload.Email, usersList[0].Email, "Email should be equal!")
+		usersList := userHelperDb.GetUsers()
+
+		assert.NotNil(t, responseId)
+		assert.Equal(t, payload.Username, usersList[0].Username)
+		assert.Equal(t, payload.Email, usersList[0].Email)
 		assert.Equal(t, len(usersList), 1)
 	})
 
-	t.Run("GetUserByIdentity", func(t *testing.T) {
-		uuidGenerator := generator.NewUUIDGenerator()
-		userRepositoryPG := repository.NewUserRepositoryPG(db, uuidGenerator)
-
-		payload := &entity.RegisterUserPayload{
-			Username: "uname",
-			Password: "password",
-			Email:    "hand@gmail.com",
-		}
-		userHelperDb.AddUserDB(payload)
-		defer userHelperDb.CleanUserDB()
-
+	t.Run("GetUserForLogin", func(t *testing.T) {
 		t.Run("Should get user by email", func(t *testing.T) {
-			// Action
-			userId, password := userRepositoryPG.GetUserByIdentity("hand@gmail.com")
-
-			// Assert
-			assert.NotNil(t, userId)
-			assert.NotNil(t, password)
+			// Action and Assert
+			assert.NotPanics(t, func() {
+				userRepositoryPG.GetUserForLogin("hand@gmail.com")
+			})
 		})
 
 		t.Run("Should get user by username", func(t *testing.T) {
-			// Action
-			userId, password := userRepositoryPG.GetUserByIdentity("uname")
-
-			// Assert
-			assert.NotNil(t, userId)
-			assert.NotNil(t, password)
+			// Action and Assert
+			assert.NotPanics(t, func() {
+				userRepositoryPG.GetUserForLogin("uname")
+			})
 		})
 
 		t.Run("Should raise panic if user is not existed", func(t *testing.T) {
 			// Action and Assert
 			assert.PanicsWithError(t, "User not found!", func() {
-				userRepositoryPG.GetUserByIdentity("nonExistedUname")
+				userRepositoryPG.GetUserForLogin("nonExistedUname")
+			})
+		})
+	})
+
+	t.Run("GetUserById", func(t *testing.T) {
+		expectedUser := &userHelperDb.GetUsers()[0]
+
+		t.Run("Should get user by id", func(t *testing.T) {
+			// Arrange
+			var user *entity.User
+
+			// Actions
+			assert.NotPanics(t, func() {
+				user = userRepositoryPG.GetUserById(expectedUser.Id)
+			})
+			assert.Equal(t, expectedUser, user)
+		})
+
+		t.Run("Should raise panic if user is not existed", func(t *testing.T) {
+			assert.PanicsWithError(t, "User not found!", func() {
+				userRepositoryPG.GetUserById(uuidGenerator.Generate())
 			})
 		})
 	})

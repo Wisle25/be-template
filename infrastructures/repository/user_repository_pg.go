@@ -8,6 +8,7 @@ import (
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/domains/entity"
 	"github.com/wisle25/be-template/domains/repository"
+	"strings"
 )
 
 type UserRepositoryPG struct /* implements UserRepository */ {
@@ -42,32 +43,19 @@ func (r *UserRepositoryPG) AddUser(payload *entity.RegisterUserPayload) string {
 		payload.Email,
 	).Scan(&returnedId)
 
+	// Evaluate
 	if err != nil {
+		if strings.Contains(err.Error(), "unique constraint") {
+			panic(fiber.NewError(fiber.StatusConflict, "Username or Email already exists!"))
+		}
+
 		panic(fmt.Errorf("user_repo_pg_error: add user: %v", err))
 	}
 
 	return returnedId
 }
 
-func (r *UserRepositoryPG) VerifyUsername(username string) {
-	var id string
-
-	// Query
-	query := "SELECT id FROM users WHERE username = $1"
-	err := r.db.QueryRow(query, username).Scan(&id)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return
-		} else {
-			panic(fmt.Errorf("user_repo_pg_error: verify username: %v", err))
-		}
-	}
-
-	panic(fiber.NewError(fiber.StatusConflict, "Username is already in use!"))
-}
-
-func (r *UserRepositoryPG) GetUserByIdentity(identity string) (string, string) {
+func (r *UserRepositoryPG) GetUserForLogin(identity string) (string, string) {
 	var userId string
 	var encryptedPassword string
 
@@ -85,4 +73,28 @@ func (r *UserRepositoryPG) GetUserByIdentity(identity string) (string, string) {
 	}
 
 	return userId, encryptedPassword
+}
+
+func (r *UserRepositoryPG) GetUserById(id string) *entity.User {
+	var result entity.User
+
+	// Query
+	query := `SELECT id, username, email, avatar_link FROM users WHERE id = $1`
+	err := r.db.QueryRow(query, id).Scan(
+		&result.Id,
+		&result.Username,
+		&result.Email,
+		&result.AvatarLink,
+	)
+
+	// Evaluate
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			panic(fiber.NewError(fiber.StatusNotFound, "User not found!"))
+		}
+
+		panic(fmt.Errorf("user_repo_pg_error: get userId by id %v", err))
+	}
+
+	return &result
 }

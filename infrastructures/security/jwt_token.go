@@ -31,8 +31,8 @@ func (jt *JwtToken) CreateToken(userID string, ttl time.Duration, privateKey str
 
 	// Creating token details
 	td := &entity.TokenDetail{
-		TokenID:   jt.idGenerator.Generate(),
-		UserID:    userID,
+		TokenId:   jt.idGenerator.Generate(),
+		UserId:    userID,
 		ExpiresIn: now.Add(ttl).Unix(),
 		MaxAge:    int(ttl.Seconds()),
 	}
@@ -52,7 +52,7 @@ func (jt *JwtToken) CreateToken(userID string, ttl time.Duration, privateKey str
 	// Define JWT claims
 	atClaims := jwt.MapClaims{
 		"sub":      userID,
-		"token_id": td.TokenID,
+		"token_id": td.TokenId,
 		"exp":      td.ExpiresIn,
 		"iat":      now.Unix(),
 		"nbf":      now.Unix(),
@@ -110,7 +110,7 @@ func (jt *JwtToken) ValidateToken(token string, publicKey string) *entity.TokenD
 
 	// Return the token details
 	return &entity.TokenDetail{
-		TokenID: fmt.Sprintf("%s", claims["token_id"]),
-		UserID:  fmt.Sprintf("%s", claims["sub"]),
+		TokenId: fmt.Sprintf("%s", claims["token_id"]),
+		UserId:  fmt.Sprintf("%s", claims["sub"]),
 	}
 }

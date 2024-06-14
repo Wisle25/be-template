@@ -2,39 +2,37 @@ package validation
 
 import (
 	"fmt"
-	ut "github.com/go-playground/universal-translator"
-	"github.com/go-playground/validator/v10"
 	"github.com/wisle25/be-template/applications/validation"
+	"github.com/wisle25/be-template/domains/entity"
+	"github.com/wisle25/be-template/infrastructures/services"
 )
 
-type GoValidateUser struct /* implements ValidateUser */ {
-	validator *validator.Validate
-	trans     ut.Translator
+type ValidateUser struct /* implements ValidateUser */ {
+	validation *services.Validation
 }
 
-func NewValidateUser(validator *validator.Validate, trans ut.Translator) validation.ValidateUser {
-	return &GoValidateUser{
-		validator: validator,
-		trans:     trans,
+func NewValidateUser(validation *services.Validation) validation.ValidateUser {
+	return &ValidateUser{
+		validation: validation,
 	}
 }
 
-func (v *GoValidateUser) ValidateRegisterPayload(s interface{}) {
+func (v *ValidateUser) ValidateRegisterPayload(payload *entity.RegisterUserPayload) {
 	schema := map[string]string{
 		"Username":        "required,min=3,max=50,alphanum",
 		"Password":        "required,min=8",
 		"Email":           "required,email",
-		"ConfirmPassword": "required,min=8," + fmt.Sprintf("eq=%s", fieldValue(s, "Password")),
+		"ConfirmPassword": "required,min=8," + fmt.Sprintf("eq=%s", services.FieldValue(payload, "Password")),
 	}
 
-	validate(s, schema, v)
+	services.Validate(payload, schema, v.validation)
 }
 
-func (v *GoValidateUser) ValidateLoginPayload(s interface{}) {
+func (v *ValidateUser) ValidateLoginPayload(payload *entity.LoginUserPayload) {
 	schema := map[string]string{
 		"Identity": "required,min=3,max=50",
 		"Password": "required,min=8",
 	}
 
-	validate(s, schema, v)
+	services.Validate(payload, schema, v.validation)
 }

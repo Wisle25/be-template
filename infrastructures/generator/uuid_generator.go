@@ -18,7 +18,7 @@ func NewUUIDGenerator() generator.IdGenerator {
 func (generator *UUIDGenerator) Generate() string {
 	id, err := uuid.NewV7()
 	if err != nil {
-		panic(fmt.Errorf("id_generator_err: %v", err))
+		panic(fmt.Errorf("id_generator_err: generate: %v", err))
 	}
 
 	return id.String()

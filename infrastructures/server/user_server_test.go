@@ -5,159 +5,186 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/infrastructures/database"
-	"github.com/wisle25/be-template/infrastructures/database/db_helper"
 	"github.com/wisle25/be-template/infrastructures/server"
+	"github.com/wisle25/be-template/infrastructures/services"
+	"github.com/wisle25/be-template/tests/db_helper"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-var accessTokenCookie string
-var refreshTokenCookie string
-
-func TestAddUser(t *testing.T) {
-	config := commons.LoadConfig("../../")
-
-	// Arrange
-	payload := map[string]string{
-		"username":        "user",
-		"email":           "user@example.com",
-		"password":        "password",
-		"confirmPassword": "password",
-	}
-	body, _ := json.Marshal(payload)
-
-	app := server.CreateServer(config)
-
-	// Action
-	req := httptest.NewRequest(
-		"POST",
-		"/users",
-		bytes.NewBuffer(body),
-	)
-	req.Header.Set("Content-Type", "application/json")
-
-	res, _ := app.Test(req)
-
-	// Assert
-	resBody, _ := io.ReadAll(res.Body)
-	var resMap map[string]string
-	_ = json.Unmarshal(resBody, &resMap)
-
-	assert.Equal(t, res.StatusCode, http.StatusCreated)
-	assert.NotNil(t, resMap["id"])
-}
-
-func TestLoginUser(t *testing.T) {
-	config := commons.LoadConfig("../../")
-	db := database.ConnectDB(config)
+func TestUserHTTP(t *testing.T) {
+	// Prepare
+	config := commons.LoadConfig("../..")
+	db := services.ConnectDB(config)
 	userHelperDB := &db_helper.UserHelperDB{
 		DB: db,
 	}
-
 	defer userHelperDB.CleanUserDB()
 
-	// Arrange
-	payload := map[string]string{
-		"identity": "user",
-		"password": "password",
-	}
-	body, _ := json.Marshal(payload)
+	var accessTokenCookie string
+	var refreshTokenCookie string
 
 	app := server.CreateServer(config)
 
-	req := httptest.NewRequest(
-		"POST",
-		"/auths",
-		bytes.NewBuffer(body),
-	)
-	req.Header.Set("Content-Type", "application/json")
-
-	// Action
-	res, _ := app.Test(req)
-
-	// Save cookie for refresh token test
-	for _, cookie := range res.Cookies() {
-		if cookie.Name == "refresh_token" {
-			refreshTokenCookie = cookie.Value
-		} else if cookie.Name == "access_token" {
-			accessTokenCookie = cookie.Value
+	t.Run("Register User", func(t *testing.T) {
+		// Arrange
+		payload := map[string]string{
+			"username":        "user",
+			"email":           "user@example.com",
+			"password":        "password",
+			"confirmPassword": "password",
 		}
-	}
+		body, _ := json.Marshal(payload)
 
-	// Assert
-	resBody, _ := io.ReadAll(res.Body)
-	var resMap map[string]string
-	_ = json.Unmarshal(resBody, &resMap)
+		// Action
+		req := httptest.NewRequest(
+			"POST",
+			"/users",
+			bytes.NewBuffer(body),
+		)
+		req.Header.Set("Content-Type", "application/json")
 
-	assert.Equal(t, 3, len(res.Cookies()))
-	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, resMap["status"], "success")
-	assert.NotEmpty(t, refreshTokenCookie)
-}
+		res, _ := app.Test(req)
 
-func TestRefreshToken(t *testing.T) {
-	// Arrange
-	config := commons.LoadConfig("../../")
+		// Assert
+		resBody, _ := io.ReadAll(res.Body)
+		var resMap map[string]string
+		_ = json.Unmarshal(resBody, &resMap)
 
-	app := server.CreateServer(config)
-
-	req := httptest.NewRequest(
-		"PUT",
-		"/auths",
-		nil,
-	)
-	req.Header.Set("Content-Type", "application/json")
-	req.AddCookie(&http.Cookie{
-		Name:  "refresh_token",
-		Value: refreshTokenCookie,
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+		assert.NotNil(t, resMap["id"])
 	})
 
-	// Action
-	res, _ := app.Test(req)
+	t.Run("Login User", func(t *testing.T) {
+		// Arrange
+		payload := map[string]string{
+			"identity": "user",
+			"password": "password",
+		}
+		body, _ := json.Marshal(payload)
 
-	// Assert
-	resBody, _ := io.ReadAll(res.Body)
-	var resMap map[string]string
-	_ = json.Unmarshal(resBody, &resMap)
+		req := httptest.NewRequest(
+			"POST",
+			"/auths",
+			bytes.NewBuffer(body),
+		)
+		req.Header.Set("Content-Type", "application/json")
 
-	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, resMap["status"], "success")
-}
+		// Action
+		res, _ := app.Test(req)
 
-func TestLogoutUser(t *testing.T) {
-	config := commons.LoadConfig("../../")
+		// Save cookie for refresh token test
+		for _, cookie := range res.Cookies() {
+			if cookie.Name == "refresh_token" {
+				refreshTokenCookie = cookie.Value
+			} else if cookie.Name == "access_token" {
+				accessTokenCookie = cookie.Value
+			}
+		}
 
-	// Arrange
-	app := server.CreateServer(config)
+		// Assert
+		resBody, _ := io.ReadAll(res.Body)
+		var resMap map[string]string
+		_ = json.Unmarshal(resBody, &resMap)
 
-	req := httptest.NewRequest(
-		http.MethodDelete,
-		"/auths",
-		nil,
-	)
-	req.Header.Set("Content-Type", "application/json")
-	req.AddCookie(&http.Cookie{
-		Name:  "access_token",
-		Value: accessTokenCookie,
+		assert.Equal(t, 3, len(res.Cookies()))
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "success", resMap["status"])
+		assert.NotEmpty(t, refreshTokenCookie)
 	})
-	req.AddCookie(&http.Cookie{
-		Name:  "refresh_token",
-		Value: refreshTokenCookie,
+
+	t.Run("Refresh Token", func(t *testing.T) {
+		// Arrange
+		req := httptest.NewRequest(
+			"PUT",
+			"/auths",
+			nil,
+		)
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(&http.Cookie{
+			Name:  "refresh_token",
+			Value: refreshTokenCookie,
+		})
+
+		// Action
+		res, _ := app.Test(req)
+
+		// Assert
+		resBody, _ := io.ReadAll(res.Body)
+		var resMap map[string]string
+		_ = json.Unmarshal(resBody, &resMap)
+
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "success", resMap["status"])
 	})
 
-	// Action
-	res, _ := app.Test(req)
+	t.Run("Logout User", func(t *testing.T) {
+		// Arrange
+		req := httptest.NewRequest(
+			http.MethodDelete,
+			"/auths",
+			nil,
+		)
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: accessTokenCookie,
+		})
+		req.AddCookie(&http.Cookie{
+			Name:  "refresh_token",
+			Value: refreshTokenCookie,
+		})
 
-	// Assert
-	resBody, _ := io.ReadAll(res.Body)
-	var resMap map[string]string
-	_ = json.Unmarshal(resBody, &resMap)
+		// Action
+		res, _ := app.Test(req)
 
-	assert.Equal(t, 3, len(res.Cookies()))
-	assert.Equal(t, res.StatusCode, http.StatusOK)
-	assert.Equal(t, resMap["status"], "success")
-	assert.NotEmpty(t, refreshTokenCookie)
+		// Assert
+		resBody, _ := io.ReadAll(res.Body)
+		var resMap map[string]string
+		_ = json.Unmarshal(resBody, &resMap)
+
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "success", resMap["status"])
+	})
+
+	t.Run("Get User By Id", func(t *testing.T) {
+		// Arrange
+		expectedUser := &userHelperDB.GetUsers()[0]
+
+		req := httptest.NewRequest(
+			http.MethodGet,
+			"/users/"+expectedUser.Id,
+			nil,
+		)
+		req.Header.Set("Content-Type", "application/json")
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: accessTokenCookie,
+		})
+		req.AddCookie(&http.Cookie{
+			Name:  "refresh_token",
+			Value: refreshTokenCookie,
+		})
+
+		// Action
+		res, _ := app.Test(req)
+
+		// Assert
+		resBody, _ := io.ReadAll(res.Body)
+		var resMap map[string]interface{}
+		_ = json.Unmarshal(resBody, &resMap)
+
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "success", resMap["status"])
+		
+		// Access the data part
+		dataMap := resMap["data"].(map[string]interface{})
+
+		assert.Equal(t, expectedUser.Id, dataMap["Id"].(string))
+		assert.Equal(t, expectedUser.Username, dataMap["Username"].(string))
+		assert.Equal(t, expectedUser.Email, dataMap["Email"].(string))
+		assert.Equal(t, expectedUser.AvatarLink, dataMap["AvatarLink"].(string))
+	})
 }

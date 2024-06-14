@@ -18,9 +18,11 @@ func NewUserHandler(useCase *use_case.UserUseCase) *UserHandler {
 }
 
 func (h *UserHandler) AddUser(c *fiber.Ctx) error {
-	// Use Case
+	// Payload
 	var payload entity.RegisterUserPayload
 	_ = c.BodyParser(&payload)
+
+	// Use Case
 	returnedId := h.useCase.ExecuteAdd(&payload)
 
 	// Response
@@ -31,9 +33,11 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) Login(c *fiber.Ctx) error {
-	// Use Case
+	// Payload
 	var payload entity.LoginUserPayload
 	_ = c.BodyParser(&payload)
+
+	// Use Case
 	accessTokenDetail, refreshTokenDetail := h.useCase.ExecuteLogin(&payload)
 
 	// Insert the tokens to cookies
@@ -75,9 +79,10 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
-	// Use Case
+	// Payload
 	refreshToken := c.Cookies("refresh_token")
 
+	// Use Case
 	accessTokenDetail := h.useCase.ExecuteRefreshToken(refreshToken)
 
 	// Insert the tokens to cookies
@@ -98,12 +103,13 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
-	// Use Case
+	// Payload
 	refreshToken := c.Cookies("refresh_token")
 	accessTokenId := c.Locals("access_token_id").(string)
 
+	// Use Case
 	h.useCase.ExecuteLogout(refreshToken, accessTokenId)
-	
+
 	// Remove from cookie
 	expiredTime := time.Now().Add(-time.Hour * 24)
 
@@ -127,5 +133,19 @@ func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Successfully logged out!",
+	})
+}
+
+func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
+	// Payload
+	id := c.Params("id")
+
+	// Use Case
+	user := h.useCase.ExecuteGetUserById(id)
+
+	// Response
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   user,
 	})
 }

@@ -1,4 +1,4 @@
-﻿package cache
+﻿package services
 
 import (
 	"context"
@@ -12,7 +12,8 @@ func ConnectRedis(config *commons.Config) *redis.Client {
 	ctx := context.TODO()
 
 	RedisClient := redis.NewClient(&redis.Options{
-		Addr: config.RedisURL,
+		Addr:     fmt.Sprintf("%s:%s", config.RedisHost, config.RedisPort),
+		Password: config.RedisPassword,
 	})
 
 	// Ping the Redis server to ensure the connection is established.

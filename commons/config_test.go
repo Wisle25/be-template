@@ -7,8 +7,14 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	assert.NotPanics(t, func() {
-		commons.LoadConfig("../")
+	// Arrange
+	var cfg *commons.Config
 
+	// Actions and Assert
+	assert.NotPanics(t, func() {
+		cfg = commons.LoadConfig("..")
 	})
+	assert.NotNil(t, cfg)
+	assert.Equal(t, "8000", cfg.ServerPort)
+	assert.Equal(t, "test", cfg.AppEnv)
 }

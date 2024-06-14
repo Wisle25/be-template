@@ -25,7 +25,7 @@ func (r *RedisCache) SetCache(key string, value interface{}, expiration time.Dur
 	err := r.redis.Set(ctx, key, value, expiration).Err()
 
 	if err != nil {
-		panic(fmt.Errorf("redis_cache_err: %v", err))
+		panic(fmt.Errorf("redis_cache_err: set cache: %v", err))
 	}
 }
 

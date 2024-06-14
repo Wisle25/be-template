@@ -3,7 +3,7 @@
 import "time"
 
 // Cache interface defines methods for setting and getting cache values.
-// This interface is used when the use case wants to cache something using Redis client set/get functions.
+// This interface is used when the use case wants to cache something
 type Cache interface {
 	// SetCache sets a value in the cache with an expiration duration.
 	SetCache(key string, value interface{}, expiration time.Duration)

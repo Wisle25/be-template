@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 services:
   postgres:
     image: postgres:latest
@@ -7,15 +7,23 @@ services:
       - '5432:5432'
     volumes:
       - progresDB:/var/lib/postgresql/data
+      - ./init-db-test.sh:/docker-entrypoint-initdb.d/init-db-test.sh
     env_file:
-      - ./.env
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   pgAdmin:
     image: dpage/pgadmin4
     container_name: pgAdmin
     env_file:
-      - ./.env
+      - .env
     ports:
       - "5050:80"
+
   redis:
     image: redis:alpine
     container_name: redis
@@ -23,6 +31,29 @@ services:
       - '6379:6379'
     volumes:
       - redisDB:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=dev
+      - POSTGRES_HOST=postgres
+      - REDIS_HOST=redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["sh", "-c", "make migrate-up-test && make migrate-up && ./main"]
+
 volumes:
   redisDB:
   progresDB:

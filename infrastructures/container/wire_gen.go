@@ -8,27 +8,24 @@ package container
 
 import (
 	"database/sql"
-	"github.com/redis/go-redis/v9"
+	"github.com/wisle25/be-template/applications/cache"
+	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/commons"
-	"github.com/wisle25/be-template/infrastructures/cache"
-	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/repository"
 	"github.com/wisle25/be-template/infrastructures/security"
+	"github.com/wisle25/be-template/infrastructures/services"
 	"github.com/wisle25/be-template/infrastructures/validation"
 )
 
-// Injectors from user_container.go:
+// Injectors from container.go:
 
-func NewUserContainer(config *commons.Config, db *sql.DB, client *redis.Client) *use_case.UserUseCase {
-	idGenerator := generator.NewUUIDGenerator()
+// Dependency Injection for User Use Case
+func NewUserContainer(config *commons.Config, db *sql.DB, cache2 cache.Cache, idGenerator generator.IdGenerator, validator *services.Validation) *use_case.UserUseCase {
 	userRepository := repository.NewUserRepositoryPG(db, idGenerator)
 	passwordHash := security.NewArgon2()
-	validate := validation.NewValidator()
-	translator := validation.NewValidatorTranslator(validate)
-	validateUser := validation.NewValidateUser(validate, translator)
+	validateUser := validation.NewValidateUser(validator)
 	token := security.NewJwtToken(idGenerator)
-	cacheCache := cache.NewRedisCache(client)
-	userUseCase := use_case.NewUserUseCase(userRepository, passwordHash, validateUser, config, token, cacheCache)
+	userUseCase := use_case.NewUserUseCase(userRepository, passwordHash, validateUser, config, token, cache2)
 	return userUseCase
 }
