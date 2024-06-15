@@ -9,8 +9,11 @@ import (
 	"github.com/wisle25/be-template/infrastructures/services"
 	"github.com/wisle25/be-template/tests/db_helper"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -178,7 +181,7 @@ func TestUserHTTP(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, "success", resMap["status"])
-		
+
 		// Access the data part
 		dataMap := resMap["data"].(map[string]interface{})
 
@@ -186,5 +189,53 @@ func TestUserHTTP(t *testing.T) {
 		assert.Equal(t, expectedUser.Username, dataMap["Username"].(string))
 		assert.Equal(t, expectedUser.Email, dataMap["Email"].(string))
 		assert.Equal(t, expectedUser.AvatarLink, dataMap["AvatarLink"].(string))
+	})
+
+	t.Run("Update User By Id", func(t *testing.T) {
+		// Arrange
+		expectedUser := &userHelperDB.GetUsers()[0]
+		var buf bytes.Buffer
+		writer := multipart.NewWriter(&buf)
+		_ = writer.WriteField("username", "updateduser")
+		_ = writer.WriteField("email", "updateduser@example.com")
+		_ = writer.WriteField("password", "newpassword")
+		_ = writer.WriteField("confirmPassword", "newpassword")
+
+		file, err := os.Open(filepath.Join("tests", "avatar.png"))
+		assert.Nil(t, err)
+		part, err := writer.CreateFormFile("avatar", "avatar.png")
+		assert.Nil(t, err)
+		_, err = io.Copy(part, file)
+		assert.Nil(t, err)
+		file.Close()
+
+		writer.Close()
+
+		req := httptest.NewRequest(
+			http.MethodPut,
+			"/users/"+expectedUser.Id,
+			&buf,
+		)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+		req.AddCookie(&http.Cookie{
+			Name:  "access_token",
+			Value: accessTokenCookie,
+		})
+		req.AddCookie(&http.Cookie{
+			Name:  "refresh_token",
+			Value: refreshTokenCookie,
+		})
+
+		// Action
+		res, _ := app.Test(req)
+
+		// Assert
+		resBody, _ := io.ReadAll(res.Body)
+		var resMap map[string]string
+		_ = json.Unmarshal(resBody, &resMap)
+
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, "success", resMap["status"])
+		assert.Equal(t, "Successfully update user!", resMap["message"])
 	})
 }

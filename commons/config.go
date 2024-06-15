@@ -37,6 +37,13 @@ type Config struct {
 	RefreshTokenPublicKey  string        `mapstructure:"REFRESH_TOKEN_PUBLIC_KEY"`
 	RefreshTokenExpiresIn  time.Duration `mapstructure:"REFRESH_TOKEN_EXPIRED_IN"`
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
+
+	// Minio
+	MinioEndpoint  string `mapstructure:"MINIO_ENDPOINT"`
+	MinioAccessKey string `mapstructure:"MINIO_ACCESS_KEY"`
+	MinioSecretKey string `mapstructure:"MINIO_SECRET_KEY"`
+	MinioBucket    string `mapstructure:"MINIO_BUCKET"`
+	MinioLocation  string `mapstructure:"MINIO_LOCATION"`
 }
 
 // LoadConfig loads configuration from the specified path.

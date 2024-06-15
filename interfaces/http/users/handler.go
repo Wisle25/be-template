@@ -1,6 +1,7 @@
 ﻿package users
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/domains/entity"
@@ -147,5 +148,38 @@ func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"status": "success",
 		"data":   user,
+	})
+}
+
+func (h *UserHandler) UpdateUserById(c *fiber.Ctx) error {
+	var err error
+
+	// Make sure to update self (not by others)
+	id := c.Params("id")
+	loggedUserId := c.Locals("user_id").(string)
+
+	if loggedUserId != id {
+		return fiber.NewError(
+			fiber.StatusForbidden,
+			"You are not able to edit other user's profile!",
+		)
+	}
+
+	// Payload
+	var payload entity.UpdateUserPayload
+	_ = c.BodyParser(&payload)
+
+	payload.Avatar, err = c.FormFile("avatar")
+	if err != nil {
+		return fmt.Errorf("upload avatar: %v", err)
+	}
+
+	// Use Case
+	h.useCase.ExecuteUpdateUserById(id, &payload)
+
+	// Response
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status":  "success",
+		"message": "Successfully update user!",
 	})
 }

@@ -1,5 +1,7 @@
 package entity
 
+import "mime/multipart"
+
 // RegisterUserPayload represents the payload for user registration.
 type RegisterUserPayload struct {
 	Username        string `json:"username"`        // Username chosen by the user
@@ -12,6 +14,14 @@ type RegisterUserPayload struct {
 type LoginUserPayload struct {
 	Identity string `json:"identity"` // User's identity which could be username or email
 	Password string `json:"password"` // User's password
+}
+
+type UpdateUserPayload struct {
+	Username        string `json:"username"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
+	Avatar          *multipart.FileHeader
 }
 
 // User represents a user in the system.

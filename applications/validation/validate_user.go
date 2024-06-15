@@ -6,4 +6,5 @@ import "github.com/wisle25/be-template/domains/entity"
 type ValidateUser interface {
 	ValidateRegisterPayload(payload *entity.RegisterUserPayload)
 	ValidateLoginPayload(payload *entity.LoginUserPayload)
+	ValidateUpdatePayload(payload *entity.UpdateUserPayload)
 }

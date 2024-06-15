@@ -17,4 +17,9 @@ type UserRepository interface {
 	// GetUserById Get detailed information about User
 	// It should raise panic if user is not existed
 	GetUserById(id string) *entity.User
+
+	// UpdateUserById Updating user data
+	// It should raise panic if user is not existed
+	// Returns old avatar link (Link is used to delete the old one)
+	UpdateUserById(id string, payload *entity.UpdateUserPayload, newAvatarLink string) string
 }

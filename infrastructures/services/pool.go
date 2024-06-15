@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"reflect"
 
 	_ "github.com/lib/pq"
@@ -40,7 +41,7 @@ func ConnectDB(config *commons.Config) *sql.DB {
 		panic(fmt.Errorf("connect_DB_err: Pinging: %v", err))
 	}
 
-	fmt.Println("Successfully connected to Postgres!")
+	log.Println("Successfully connected to Postgres!")
 
 	return DB
 }
@@ -65,7 +66,7 @@ func GetTableDB[T any](rows *sql.Rows) []T {
 
 		// Scan the row into the struct fields.
 		if err := rows.Scan(columns...); err != nil {
-			fmt.Println("Error scanning row: ", err)
+			log.Fatalf("Error scanning row: %v", err)
 			return nil // Return nil if there is an error
 		}
 
@@ -74,7 +75,7 @@ func GetTableDB[T any](rows *sql.Rows) []T {
 	}
 
 	if err := rows.Err(); err != nil {
-		fmt.Println("Error reading rows: ", err)
+		log.Fatalf("Error reading rows: %v", err)
 		return nil // Return nil if there is an error
 	}
 

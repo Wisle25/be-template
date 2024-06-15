@@ -2,6 +2,7 @@ package use_case
 
 import (
 	"github.com/wisle25/be-template/applications/cache"
+	"github.com/wisle25/be-template/applications/processing"
 	"github.com/wisle25/be-template/applications/security"
 	"github.com/wisle25/be-template/applications/validation"
 	"github.com/wisle25/be-template/commons"
@@ -13,6 +14,7 @@ import (
 // UserUseCase handles the business logic for user operations.
 type UserUseCase struct {
 	userRepository repository.UserRepository
+	fileProcessing processing.FileProcessing
 	passwordHash   security.PasswordHash
 	validator      validation.ValidateUser
 	config         *commons.Config
@@ -22,6 +24,7 @@ type UserUseCase struct {
 
 func NewUserUseCase(
 	userRepository repository.UserRepository,
+	fileProcessing processing.FileProcessing,
 	passwordHash security.PasswordHash,
 	validator validation.ValidateUser,
 	config *commons.Config,
@@ -30,6 +33,7 @@ func NewUserUseCase(
 ) *UserUseCase {
 	return &UserUseCase{
 		userRepository: userRepository,
+		fileProcessing: fileProcessing,
 		passwordHash:   passwordHash,
 		validator:      validator,
 		config:         config,
@@ -109,6 +113,23 @@ func (uc *UserUseCase) ExecuteGuard(accessToken string) (interface{}, *entity.To
 	return uc.cache.GetCache(accessTokenDetail.TokenId), accessTokenDetail
 }
 
+// ExecuteGetUserById simply returns specified user information by ID
 func (uc *UserUseCase) ExecuteGetUserById(userId string) *entity.User {
 	return uc.userRepository.GetUserById(userId)
+}
+
+// ExecuteUpdateUserById Updating user information and now user can set their new password and upload an avatar.
+func (uc *UserUseCase) ExecuteUpdateUserById(userId string, payload *entity.UpdateUserPayload) {
+	uc.validator.ValidateUpdatePayload(payload)
+	
+	// Hash password
+	payload.Password = uc.passwordHash.Hash(payload.Password)
+
+	// Handling avatar file
+	newAvatarLink := uc.fileProcessing.UploadFile(payload.Avatar)
+	oldAvatarLink := uc.userRepository.UpdateUserById(userId, payload, newAvatarLink)
+
+	if oldAvatarLink != "" {
+		uc.fileProcessing.RemoveFile(oldAvatarLink)
+	}
 }

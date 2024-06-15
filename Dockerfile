@@ -17,7 +17,7 @@ COPY .env .
 RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 # Copy entrypoint script
-COPY run.sh .
+COPY scripts/run.sh .
 
 # Build the Go app
 RUN go build -ldflags "-s -w" -o main .

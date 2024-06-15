@@ -1,7 +1,6 @@
 package security_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +20,6 @@ func TestArgon2PasswordHash(t *testing.T) {
 		// Assert
 		assert.NotEqual(t, plainPassword, encryptedPassword, "encrypted password should not be the same as plain password")
 		assert.IsType(t, "string", encryptedPassword, "encrypted password should be a string")
-		fmt.Printf("encryptedPassword: %s\n", encryptedPassword)
 	})
 
 	t.Run("Compare Password", func(t *testing.T) {
@@ -36,7 +34,7 @@ func TestArgon2PasswordHash(t *testing.T) {
 				argon2PasswordHash.Compare(plainPassword, encryptedPassword)
 			})
 		})
-	
+
 		t.Run("Comparison should raise panic when its not matched", func(t *testing.T) {
 			// Action
 			assert.PanicsWithError(t, "Password is incorrect!", func() {

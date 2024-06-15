@@ -51,4 +51,13 @@ migrate-up-test:
 migrate-down-test:
 	migrate -path $(MIGRATIONS_PATH) -database "$(DATABASE_URL_TEST)" down
 
-.PHONY: install-migrate create-migration migrate-up migrate-down migrate-up-test migrate-down-test migrate-fix
+restart:
+	docker-compose down -v
+	docker-compose up -d --build
+	docker image prune -f
+
+minio-access:
+	mc alias set myminio http://localhost:9000 $(MINIO_ACCESS_KEY) $(MINIO_SECRET_KEY)
+	mc anonymous set download myminio/be-template
+
+.PHONY: install-migrate create-migration migrate-up migrate-down migrate-up-test migrate-down-test migrate-fix restart minio-access

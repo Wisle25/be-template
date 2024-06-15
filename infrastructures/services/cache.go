@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"github.com/wisle25/be-template/commons"
+	"log"
 )
 
 // ConnectRedis initializes a connection to the Redis server using the provided configuration.
@@ -21,7 +22,7 @@ func ConnectRedis(config *commons.Config) *redis.Client {
 		panic(err)
 	}
 
-	fmt.Println("Successfully connected to Redis Client")
+	log.Println("Successfully connected to Redis Client")
 
 	return RedisClient
 }

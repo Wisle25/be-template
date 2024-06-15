@@ -98,3 +98,35 @@ func (r *UserRepositoryPG) GetUserById(id string) *entity.User {
 
 	return &result
 }
+
+func (r *UserRepositoryPG) UpdateUserById(id string, payload *entity.UpdateUserPayload, newAvatarLink string) string {
+	// Update query with CTE to return the old avatar_link
+	query := `
+		WITH old_data AS (
+			SELECT avatar_link
+			FROM users
+			WHERE id = $1
+		)
+		UPDATE users 
+		SET username = $2, email = $3, password = $4, avatar_link = $5
+		FROM old_data
+		WHERE users.id = $1
+		RETURNING old_data.avatar_link
+	`
+
+	var oldAvatarLink string
+	err := r.db.QueryRow(query, id, payload.Username, payload.Email, payload.Password, newAvatarLink).Scan(&oldAvatarLink)
+
+	// Evaluate
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			panic(fiber.NewError(fiber.StatusNotFound, "User not found!"))
+		}
+		if strings.Contains(err.Error(), "unique constraint") {
+			panic(fiber.NewError(fiber.StatusConflict, "Username or Email already exists!"))
+		}
+		panic(fmt.Errorf("user_repo_pg_error: update user: %v", err))
+	}
+
+	return oldAvatarLink
+}

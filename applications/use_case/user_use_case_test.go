@@ -3,6 +3,7 @@ package use_case_test
 import (
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/domains/entity"
+	"mime/multipart"
 	"testing"
 	"time"
 
@@ -34,6 +35,12 @@ func (m *MockUserRepository) GetUserById(id string) *entity.User {
 	return args.Get(0).(*entity.User)
 }
 
+func (m *MockUserRepository) UpdateUserById(id string, payload *entity.UpdateUserPayload, avatarLink string) string {
+	args := m.Called(id, payload, avatarLink)
+
+	return args.String(0)
+}
+
 type MockPasswordHash struct {
 	mock.Mock
 }
@@ -56,6 +63,10 @@ func (m *MockValidateUser) ValidateRegisterPayload(payload *entity.RegisterUserP
 }
 
 func (m *MockValidateUser) ValidateLoginPayload(payload *entity.LoginUserPayload) {
+	m.Called(payload)
+}
+
+func (m *MockValidateUser) ValidateUpdatePayload(payload *entity.UpdateUserPayload) {
 	m.Called(payload)
 }
 
@@ -90,6 +101,20 @@ func (m *MockCache) DeleteCache(key string) {
 	m.Called(key)
 }
 
+type MockFileProcessing struct {
+	mock.Mock
+}
+
+func (m *MockFileProcessing) UploadFile(fileHeader *multipart.FileHeader) string {
+	args := m.Called(fileHeader)
+
+	return args.String(0)
+}
+
+func (m *MockFileProcessing) RemoveFile(oldFileLink string) {
+	m.Called(oldFileLink)
+}
+
 func TestUserUseCase(t *testing.T) {
 	mockUserRepo := new(MockUserRepository)
 	mockPasswordHash := new(MockPasswordHash)
@@ -102,8 +127,17 @@ func TestUserUseCase(t *testing.T) {
 	}
 	mockToken := new(MockToken)
 	mockCache := new(MockCache)
+	mockFileProcessing := new(MockFileProcessing)
 
-	userUseCase := use_case.NewUserUseCase(mockUserRepo, mockPasswordHash, mockValidator, mockConfig, mockToken, mockCache)
+	userUseCase := use_case.NewUserUseCase(
+		mockUserRepo,
+		mockFileProcessing,
+		mockPasswordHash,
+		mockValidator,
+		mockConfig,
+		mockToken,
+		mockCache,
+	)
 
 	t.Run("Execute Add", func(t *testing.T) {
 		// Arrange
@@ -266,6 +300,38 @@ func TestUserUseCase(t *testing.T) {
 
 		// Assert
 		assert.Equal(t, expectedUser, user)
+		mockUserRepo.AssertExpectations(t)
+	})
+
+	t.Run("Execute UpdateUserById", func(t *testing.T) {
+		// Arrange
+		userId := "userid123"
+		payload := &entity.UpdateUserPayload{
+			Username:        "username",
+			Email:           "email",
+			Password:        "any password",
+			ConfirmPassword: "any password",
+			Avatar: &multipart.FileHeader{
+				Filename: "Any",
+				Header:   nil,
+				Size:     0,
+			},
+		}
+		avatarLink := "avatar_link"
+		oldAvatarLink := "old_avatar_link"
+
+		mockValidator.On("ValidateUpdatePayload", payload).Return(nil)
+		mockPasswordHash.On("Hash", payload.Password).Return("hashedPassword")
+		mockFileProcessing.On("UploadFile", payload.Avatar).Return(avatarLink)
+		mockUserRepo.On("UpdateUserById", userId, payload, avatarLink).Return(oldAvatarLink)
+		mockFileProcessing.On("RemoveFile", oldAvatarLink).Return(nil)
+
+		// Actions
+		userUseCase.ExecuteUpdateUserById(userId, payload)
+
+		// Assert
+		mockValidator.AssertExpectations(t)
+		mockFileProcessing.AssertExpectations(t)
 		mockUserRepo.AssertExpectations(t)
 	})
 }

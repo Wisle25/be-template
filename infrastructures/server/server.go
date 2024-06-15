@@ -10,6 +10,7 @@ import (
 	"github.com/wisle25/be-template/infrastructures/cache"
 	"github.com/wisle25/be-template/infrastructures/container"
 	"github.com/wisle25/be-template/infrastructures/generator"
+	"github.com/wisle25/be-template/infrastructures/processing"
 	"github.com/wisle25/be-template/infrastructures/services"
 	"github.com/wisle25/be-template/interfaces/http/middlewares"
 	"github.com/wisle25/be-template/interfaces/http/users"
@@ -17,27 +18,30 @@ import (
 
 func errorHandling(c *fiber.Ctx, err error) error {
 	// Status code defaults to 500
+	status := "error"
 	code := fiber.StatusInternalServerError
 	message := err.Error()
 
 	// Retrieve the custom status code if it's a *fiber.Error
 	var e *fiber.Error
 	if errors.As(err, &e) {
+		status = "fail"
 		code = e.Code
 		message = e.Message
 	}
 
 	// Send custom error
 	return c.Status(code).JSON(fiber.Map{
-		"status":  "fail",
+		"status":  status,
 		"message": message,
 	})
 }
 
 func CreateServer(config *commons.Config) *fiber.App {
-	// Load Utils
+	// Load Services
 	db := services.ConnectDB(config)
 	redis := services.ConnectRedis(config)
+	minio, bucketName := services.NewMinio(config)
 
 	// Server
 	app := fiber.New(fiber.Config{
@@ -58,9 +62,17 @@ func CreateServer(config *commons.Config) *fiber.App {
 	redisCache := cache.NewRedisCache(redis)
 	uuidGenerator := generator.NewUUIDGenerator()
 	validation := services.NewValidation()
+	minioFileProcessing := processing.NewMinioFileProcessing(minio, uuidGenerator, bucketName)
 
 	// Use Cases
-	userUseCase := container.NewUserContainer(config, db, redisCache, uuidGenerator, validation)
+	userUseCase := container.NewUserContainer(
+		config,
+		db,
+		redisCache,
+		uuidGenerator,
+		minioFileProcessing,
+		validation,
+	)
 
 	// Custom Middleware
 	jwtMiddleware := middlewares.NewJwtMiddleware(userUseCase)
