@@ -596,7 +596,7 @@
 									"    pm.expect(jsonData.status).to.eql(\"fail\");\r",
 									"});\r",
 									"pm.test(\"Message must show email is already in use\", function () {\r",
-									"    pm.expect(jsonData.message).to.include(\"in use\");\r",
+									"    pm.expect(jsonData.message).to.include(\"exists\");\r",
 									"});\r",
 									"\r",
 									"// remove any users\r",
@@ -632,6 +632,99 @@
 							"port": "{{port}}",
 							"path": [
 								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get User By Id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{host}}:{{port}}/users/01901c93-299d-7b64-80da-027d3ef12eb5",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"users",
+								"01901c93-299d-7b64-80da-027d3ef12eb5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User By Id",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "anca25",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "updatedHandidwic1225@gmail.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Passwordsayaini",
+									"type": "text"
+								},
+								{
+									"key": "confirmPassword",
+									"value": "Passwordsayaini",
+									"type": "text"
+								},
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": "/D:/GoProjects/be-template/tests/avatar.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{host}}:{{port}}/users/01901c93-299d-7b64-80da-027d3ef12eb5",
+							"host": [
+								"{{host}}"
+							],
+							"port": "{{port}}",
+							"path": [
+								"users",
+								"01901c93-299d-7b64-80da-027d3ef12eb5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get User's Avatar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:9000/be-template/01901c93-949f-7178-a6e6-7ab6063bdc8f.png",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "9000",
+							"path": [
+								"be-template",
+								"01901c93-949f-7178-a6e6-7ab6063bdc8f.png"
 							]
 						}
 					},

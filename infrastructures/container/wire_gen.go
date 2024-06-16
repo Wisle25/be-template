@@ -9,8 +9,8 @@ package container
 import (
 	"database/sql"
 	"github.com/wisle25/be-template/applications/cache"
+	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/generator"
-	"github.com/wisle25/be-template/applications/processing"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/infrastructures/repository"
@@ -22,11 +22,11 @@ import (
 // Injectors from container.go:
 
 // Dependency Injection for User Use Case
-func NewUserContainer(config *commons.Config, db *sql.DB, cache2 cache.Cache, idGenerator generator.IdGenerator, fileProcessing processing.FileProcessing, validator *services.Validation) *use_case.UserUseCase {
+func NewUserContainer(config *commons.Config, db *sql.DB, cache2 cache.Cache, idGenerator generator.IdGenerator, fileProcessing file_statics.FileProcessing, fileUpload file_statics.FileUpload, validator *services.Validation) *use_case.UserUseCase {
 	userRepository := repository.NewUserRepositoryPG(db, idGenerator)
 	passwordHash := security.NewArgon2()
 	validateUser := validation.NewValidateUser(validator)
 	token := security.NewJwtToken(idGenerator)
-	userUseCase := use_case.NewUserUseCase(userRepository, fileProcessing, passwordHash, validateUser, config, token, cache2)
+	userUseCase := use_case.NewUserUseCase(userRepository, fileProcessing, fileUpload, passwordHash, validateUser, config, token, cache2)
 	return userUseCase
 }

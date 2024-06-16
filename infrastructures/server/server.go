@@ -9,8 +9,8 @@ import (
 	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/infrastructures/cache"
 	"github.com/wisle25/be-template/infrastructures/container"
+	"github.com/wisle25/be-template/infrastructures/file_statics"
 	"github.com/wisle25/be-template/infrastructures/generator"
-	"github.com/wisle25/be-template/infrastructures/processing"
 	"github.com/wisle25/be-template/infrastructures/services"
 	"github.com/wisle25/be-template/interfaces/http/middlewares"
 	"github.com/wisle25/be-template/interfaces/http/users"
@@ -62,7 +62,8 @@ func CreateServer(config *commons.Config) *fiber.App {
 	redisCache := cache.NewRedisCache(redis)
 	uuidGenerator := generator.NewUUIDGenerator()
 	validation := services.NewValidation()
-	minioFileProcessing := processing.NewMinioFileProcessing(minio, uuidGenerator, bucketName)
+	minioFileUpload := file_statics.NewMinioFileUpload(minio, uuidGenerator, bucketName)
+	vipsFileProcessing := file_statics.NewVipsFileProcessing()
 
 	// Use Cases
 	userUseCase := container.NewUserContainer(
@@ -70,7 +71,8 @@ func CreateServer(config *commons.Config) *fiber.App {
 		db,
 		redisCache,
 		uuidGenerator,
-		minioFileProcessing,
+		vipsFileProcessing,
+		minioFileUpload,
 		validation,
 	)
 

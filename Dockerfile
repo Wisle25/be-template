@@ -1,5 +1,12 @@
 ﻿FROM golang:latest
 
+# Install libvips and its dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libvips-dev \
+    gcc \
+    g++
+
 # Set the Current Working Directory inside the container
 WORKDIR /app
 

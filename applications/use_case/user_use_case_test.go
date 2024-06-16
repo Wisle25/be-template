@@ -1,8 +1,10 @@
 package use_case_test
 
 import (
+	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/domains/entity"
+	"io"
 	"mime/multipart"
 	"testing"
 	"time"
@@ -101,18 +103,33 @@ func (m *MockCache) DeleteCache(key string) {
 	m.Called(key)
 }
 
-type MockFileProcessing struct {
+type MockFileUpload struct {
 	mock.Mock
 }
 
-func (m *MockFileProcessing) UploadFile(fileHeader *multipart.FileHeader) string {
-	args := m.Called(fileHeader)
+func (m *MockFileUpload) UploadFile(buffer []byte, extension string) string {
+	args := m.Called(buffer, extension)
 
 	return args.String(0)
 }
 
-func (m *MockFileProcessing) RemoveFile(oldFileLink string) {
+func (m *MockFileUpload) RemoveFile(oldFileLink string) {
 	m.Called(oldFileLink)
+}
+
+type MockFileProcessing struct {
+	mock.Mock
+}
+
+func (m *MockFileProcessing) CompressImage(buffer []byte, to file_statics.ConvertTo) ([]byte, string) {
+	args := m.Called(buffer, to)
+
+	return args.Get(0).([]byte), args.String(1)
+}
+
+func (m *MockFileProcessing) ResizeImage(fileHeader *multipart.FileHeader) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func TestUserUseCase(t *testing.T) {
@@ -127,11 +144,13 @@ func TestUserUseCase(t *testing.T) {
 	}
 	mockToken := new(MockToken)
 	mockCache := new(MockCache)
+	mockFileUpload := new(MockFileUpload)
 	mockFileProcessing := new(MockFileProcessing)
 
 	userUseCase := use_case.NewUserUseCase(
 		mockUserRepo,
 		mockFileProcessing,
+		mockFileUpload,
 		mockPasswordHash,
 		mockValidator,
 		mockConfig,
@@ -319,18 +338,23 @@ func TestUserUseCase(t *testing.T) {
 		}
 		avatarLink := "avatar_link"
 		oldAvatarLink := "old_avatar_link"
+		file, _ := payload.Avatar.Open()
+		avatarBuffer, _ := io.ReadAll(file)
+		var compressBuffer []byte
 
 		mockValidator.On("ValidateUpdatePayload", payload).Return(nil)
 		mockPasswordHash.On("Hash", payload.Password).Return("hashedPassword")
-		mockFileProcessing.On("UploadFile", payload.Avatar).Return(avatarLink)
+		mockFileProcessing.On("CompressImage", avatarBuffer, mock.Anything).Return(compressBuffer, ".webp")
+		mockFileUpload.On("UploadFile", compressBuffer, ".webp").Return(avatarLink)
 		mockUserRepo.On("UpdateUserById", userId, payload, avatarLink).Return(oldAvatarLink)
-		mockFileProcessing.On("RemoveFile", oldAvatarLink).Return(nil)
+		mockFileUpload.On("RemoveFile", oldAvatarLink).Return(nil)
 
 		// Actions
 		userUseCase.ExecuteUpdateUserById(userId, payload)
 
 		// Assert
 		mockValidator.AssertExpectations(t)
+		mockFileUpload.AssertExpectations(t)
 		mockFileProcessing.AssertExpectations(t)
 		mockUserRepo.AssertExpectations(t)
 	})

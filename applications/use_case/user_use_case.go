@@ -2,19 +2,21 @@ package use_case
 
 import (
 	"github.com/wisle25/be-template/applications/cache"
-	"github.com/wisle25/be-template/applications/processing"
+	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/security"
 	"github.com/wisle25/be-template/applications/validation"
 	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/domains/entity"
 	"github.com/wisle25/be-template/domains/repository"
+	"io"
 	"time"
 )
 
 // UserUseCase handles the business logic for user operations.
 type UserUseCase struct {
 	userRepository repository.UserRepository
-	fileProcessing processing.FileProcessing
+	fileProcessing file_statics.FileProcessing
+	fileUpload     file_statics.FileUpload
 	passwordHash   security.PasswordHash
 	validator      validation.ValidateUser
 	config         *commons.Config
@@ -24,7 +26,8 @@ type UserUseCase struct {
 
 func NewUserUseCase(
 	userRepository repository.UserRepository,
-	fileProcessing processing.FileProcessing,
+	fileProcessing file_statics.FileProcessing,
+	fileUpload file_statics.FileUpload,
 	passwordHash security.PasswordHash,
 	validator validation.ValidateUser,
 	config *commons.Config,
@@ -34,6 +37,7 @@ func NewUserUseCase(
 	return &UserUseCase{
 		userRepository: userRepository,
 		fileProcessing: fileProcessing,
+		fileUpload:     fileUpload,
 		passwordHash:   passwordHash,
 		validator:      validator,
 		config:         config,
@@ -121,15 +125,22 @@ func (uc *UserUseCase) ExecuteGetUserById(userId string) *entity.User {
 // ExecuteUpdateUserById Updating user information and now user can set their new password and upload an avatar.
 func (uc *UserUseCase) ExecuteUpdateUserById(userId string, payload *entity.UpdateUserPayload) {
 	uc.validator.ValidateUpdatePayload(payload)
-	
+
 	// Hash password
 	payload.Password = uc.passwordHash.Hash(payload.Password)
 
 	// Handling avatar file
-	newAvatarLink := uc.fileProcessing.UploadFile(payload.Avatar)
+	file, _ := payload.Avatar.Open()
+	fileBuffer, _ := io.ReadAll(file)
+
+	compressedBuffer, extension := uc.fileProcessing.CompressImage(fileBuffer, file_statics.WEBP)
+	newAvatarLink := uc.fileUpload.UploadFile(compressedBuffer, extension)
+
+	// Updating user's repository
 	oldAvatarLink := uc.userRepository.UpdateUserById(userId, payload, newAvatarLink)
 
+	// If exists, remove user's old avatar
 	if oldAvatarLink != "" {
-		uc.fileProcessing.RemoveFile(oldAvatarLink)
+		uc.fileUpload.RemoveFile(oldAvatarLink)
 	}
 }

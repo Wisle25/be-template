@@ -1,34 +1,34 @@
-﻿package processing
+﻿package file_statics
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/minio/minio-go/v7"
+	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/generator"
-	"mime/multipart"
-	"path/filepath"
 )
 
-type MinioFileProcessing struct {
+type MinioFileUpload struct {
 	minio       *minio.Client
 	idGenerator generator.IdGenerator
 	bucketName  string
 }
 
-func NewMinioFileProcessing(
+func NewMinioFileUpload(
 	minio *minio.Client,
 	idGenerator generator.IdGenerator,
 	bucketName string,
-) *MinioFileProcessing {
-	return &MinioFileProcessing{
+) file_statics.FileUpload {
+	return &MinioFileUpload{
 		minio,
 		idGenerator,
 		bucketName,
 	}
 }
 
-func (m *MinioFileProcessing) UploadFile(fileHeader *multipart.FileHeader) string {
-	if fileHeader == nil {
+func (m *MinioFileUpload) UploadFile(buffer []byte, extension string) string {
+	if buffer == nil {
 		return ""
 	}
 
@@ -36,27 +36,18 @@ func (m *MinioFileProcessing) UploadFile(fileHeader *multipart.FileHeader) strin
 	var err error
 
 	// Create new name
-	extension := filepath.Ext(fileHeader.Filename)
 	newName := m.idGenerator.Generate() + extension
-
-	// Get buffer from file
-	buffer, err := fileHeader.Open()
-
-	if err != nil {
-		panic(fmt.Errorf("minio: get buffer file err: %v", err))
-	}
-	defer buffer.Close()
 
 	// Upload
 	uploadOpts := minio.PutObjectOptions{
-		ContentType: fileHeader.Header["Content-Type"][0],
+		ContentType: "image/" + extension[1:],
 	}
 	_, err = m.minio.PutObject(
 		ctx,
 		m.bucketName,
 		newName,
-		buffer,
-		fileHeader.Size,
+		bytes.NewReader(buffer),
+		int64(len(buffer)),
 		uploadOpts,
 	)
 	if err != nil {
@@ -66,7 +57,7 @@ func (m *MinioFileProcessing) UploadFile(fileHeader *multipart.FileHeader) strin
 	return newName
 }
 
-func (m *MinioFileProcessing) RemoveFile(oldFileLink string) {
+func (m *MinioFileUpload) RemoveFile(oldFileLink string) {
 	ctx := context.Background()
 
 	// Remove
