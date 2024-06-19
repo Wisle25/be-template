@@ -15,6 +15,7 @@ func NewUserRouter(
 
 	app.Post("/users", userHandler.AddUser)
 	app.Post("/auths", userHandler.Login)
+	app.Get("/auths", jwtMiddleware.GuardJWT, userHandler.GetLoggedUser)
 	app.Put("/auths", userHandler.RefreshToken)
 	app.Delete("/auths", jwtMiddleware.GuardJWT, userHandler.Logout)
 	app.Get("/users/:id", userHandler.GetUserById)

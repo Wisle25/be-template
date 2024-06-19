@@ -1,8 +1,11 @@
 ﻿package middlewares
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
+	"github.com/wisle25/be-template/domains/entity"
 )
 
 // JwtMiddleware gonna verifying user credential for authentication/authorization reason
@@ -23,15 +26,22 @@ func (m *JwtMiddleware) GuardJWT(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "You are not logged in!")
 	}
 
-	userId, accessTokenDetail := m.userUseCase.ExecuteGuard(accessToken)
+	userInfoJSON, accessTokenDetail := m.userUseCase.ExecuteGuard(accessToken)
 
-	if userId == nil {
+	if userInfoJSON == nil {
 		return fiber.NewError(fiber.StatusUnauthorized, "Session invalid or expired!")
 	}
 
+	// Unmarshal userInfo JSON
+	var userInfo entity.User
+	err := json.Unmarshal([]byte(userInfoJSON.(string)), &userInfo)
+	if err != nil {
+		panic(fmt.Errorf("refresh_token_err: unable to unmarshal json user info: %v", err))
+	}
+
 	// Add additional information
-	c.Locals("access_token_id", accessTokenDetail.TokenId)
-	c.Locals("user_id", userId.(string))
+	c.Locals("accessTokenId", accessTokenDetail.TokenId)
+	c.Locals("userInfo", userInfo)
 
 	return c.Next()
 }

@@ -8,7 +8,5 @@ type TokenDetail struct {
 	TokenId   string // TokenId used for cache validation
 	ExpiresIn int64  // ExpiresIn the duration in seconds until the token expires
 	MaxAge    int    // MaxAge the maximum age of the token in seconds
-
-	// User Info, Can add more such as username, role, etc.
-	UserId string // UserId the ID of the user to whom the token belongs
+	UserToken *User  // User Information of the user to whom the token belongs
 }

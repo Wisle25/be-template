@@ -7,6 +7,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/generator"
+	"io"
 )
 
 type MinioFileUpload struct {
@@ -55,6 +56,25 @@ func (m *MinioFileUpload) UploadFile(buffer []byte, extension string) string {
 	}
 
 	return newName
+}
+
+func (m *MinioFileUpload) GetFile(filename string) []byte {
+	ctx := context.Background()
+
+	// Get from minio
+	object, err := m.minio.GetObject(ctx, m.bucketName, filename, minio.GetObjectOptions{})
+	if err != nil {
+		panic(fmt.Errorf("minio: get file from minio err: %v", err))
+	}
+
+	// Convert to bytes buffer
+	buffer := new(bytes.Buffer)
+	_, err = io.Copy(buffer, object)
+	if err != nil {
+		panic(fmt.Errorf("minio: get file convert buffer err: %v", err))
+	}
+
+	return buffer.Bytes()
 }
 
 func (m *MinioFileUpload) RemoveFile(oldFileLink string) {

@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/domains/entity"
+	"strings"
 	"time"
 )
 
@@ -28,8 +29,9 @@ func (h *UserHandler) AddUser(c *fiber.Ctx) error {
 
 	// Response
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"status": "success",
-		"data":   returnedId,
+		"status":  "success",
+		"data":    returnedId,
+		"message": "Successfully registering new user! Welcome!",
 	})
 }
 
@@ -56,19 +58,9 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		Name:     "refresh_token",
 		Value:    refreshTokenDetail.Token,
 		Path:     "/",
-		MaxAge:   accessTokenDetail.MaxAge,
+		MaxAge:   refreshTokenDetail.MaxAge,
 		Secure:   true,
 		HTTPOnly: true,
-		Domain:   "localhost",
-	})
-
-	c.Cookie(&fiber.Cookie{
-		Name:     "logged_in",
-		Value:    "true",
-		Path:     "/",
-		MaxAge:   accessTokenDetail.MaxAge,
-		Secure:   false,
-		HTTPOnly: false,
 		Domain:   "localhost",
 	})
 
@@ -106,7 +98,7 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	// Payload
 	refreshToken := c.Cookies("refresh_token")
-	accessTokenId := c.Locals("access_token_id").(string)
+	accessTokenId := c.Locals("accessTokenId").(string)
 
 	// Use Case
 	h.useCase.ExecuteLogout(refreshToken, accessTokenId)
@@ -121,11 +113,6 @@ func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	})
 	c.Cookie(&fiber.Cookie{
 		Name:    "refresh_token",
-		Value:   "",
-		Expires: expiredTime,
-	})
-	c.Cookie(&fiber.Cookie{
-		Name:    "logged_in",
 		Value:   "",
 		Expires: expiredTime,
 	})
@@ -151,12 +138,19 @@ func (h *UserHandler) GetUserById(c *fiber.Ctx) error {
 	})
 }
 
+func (h *UserHandler) GetLoggedUser(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   c.Locals("userInfo").(entity.User),
+	})
+}
+
 func (h *UserHandler) UpdateUserById(c *fiber.Ctx) error {
 	var err error
 
 	// Make sure to update self (not by others)
 	id := c.Params("id")
-	loggedUserId := c.Locals("user_id").(string)
+	loggedUserId := c.Locals("userInfo").(entity.User).Id
 
 	if loggedUserId != id {
 		return fiber.NewError(
@@ -171,7 +165,11 @@ func (h *UserHandler) UpdateUserById(c *fiber.Ctx) error {
 
 	payload.Avatar, err = c.FormFile("avatar")
 	if err != nil {
-		return fmt.Errorf("upload avatar: %v", err)
+		if !strings.Contains(err.Error(), "there is no uploaded") {
+			return fmt.Errorf("upload avatar: %v", err)
+		}
+
+		payload.Avatar = nil
 	}
 
 	// Use Case

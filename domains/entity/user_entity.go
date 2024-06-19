@@ -26,8 +26,8 @@ type UpdateUserPayload struct {
 
 // User represents a user in the system.
 type User struct {
-	Id         string // Id for the user
-	Username   string // Username of the user, Username should be unique
-	Email      string // Email address of the user, Email should be unique
-	AvatarLink string // AvatarLink to the user's avatar image
+	Id         string `json:"id"`         // Id for the user
+	Username   string `json:"username"`   // Username of the user, Username should be unique
+	Email      string `json:"email"`      // Email address of the user, Email should be unique
+	AvatarLink string `json:"avatarLink"` // AvatarLink to the user's avatar image
 }

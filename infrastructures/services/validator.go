@@ -59,25 +59,36 @@ func translateError(field string, err error, trans ut.Translator) string {
 
 	var validatorErrors validator.ValidationErrors
 	errors.As(err, &validatorErrors)
-	var messages []string
 
 	for _, e := range validatorErrors {
 		translated := e.Translate(trans)
 
-		messages = append(messages, fmt.Sprintf("%s%s", field, translated))
+		return fmt.Sprintf("%s:%s%s", field, field, translated)
 	}
 
-	return strings.Join(messages, ";")
+	return ""
 }
 
 func Validate(s interface{}, schema map[string]string, v *Validation) {
+	var messages []string
+	isError := false
+
 	for field, rule := range schema {
 		value := FieldValue(s, field)
 
 		if err := v.validator.Var(value, rule); err != nil {
 			translatedErr := translateError(field, err, v.translator)
+			isError = true
 
-			panic(fiber.NewError(fiber.StatusBadRequest, translatedErr))
+			messages = append(messages, translatedErr)
 		}
+	}
+
+	if isError {
+		panic(fiber.NewError(
+			fiber.StatusBadRequest,
+			"Invalid request payload!\n"+
+				strings.Join(messages, ";"),
+		))
 	}
 }

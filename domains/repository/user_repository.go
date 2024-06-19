@@ -11,8 +11,8 @@ type UserRepository interface {
 
 	// GetUserForLogin retrieves user details based on the provided identity (username or email) for login purpose.
 	// It should raise panic if user is not existed
-	// Returns the user's ID and hashed password to be decrypted.
-	GetUserForLogin(identity string) (string, string)
+	// Returns the user's information and hashed password to be decrypted.
+	GetUserForLogin(identity string) (*entity.User, string)
 
 	// GetUserById Get detailed information about User
 	// It should raise panic if user is not existed

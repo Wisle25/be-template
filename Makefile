@@ -52,7 +52,7 @@ migrate-down-test:
 	migrate -path $(MIGRATIONS_PATH) -database "$(DATABASE_URL_TEST)" down
 
 restart:
-	docker-compose down -v
+	docker-compose down
 	docker-compose up -d --build
 	docker image prune -f
 

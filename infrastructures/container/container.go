@@ -27,7 +27,6 @@ func NewUserContainer(
 	fileUpload file_statics.FileUpload,
 	validator *services.Validation,
 ) *use_case.UserUseCase {
-	// Repository
 	wire.Build(
 		repository.NewUserRepositoryPG,
 		security.NewArgon2,

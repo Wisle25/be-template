@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/wisle25/be-template/applications/file_statics"
-	"mime/multipart"
+	"os"
+	"path/filepath"
 )
 
 type VipsFileProcessing struct {
@@ -57,7 +58,40 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.Conver
 	return result, extension
 }
 
-func (v *VipsFileProcessing) ResizeImage(fileHeader *multipart.FileHeader) {
-	//TODO implement me
-	panic("implement me")
+func (v *VipsFileProcessing) AddWatermark(buffer []byte) []byte {
+	// Open original image
+	originalImage, err := vips.NewImageFromBuffer(buffer)
+	if err != nil {
+		panic(fmt.Errorf("add_watermark_err: opening original image: %v", err))
+	}
+	defer originalImage.Close()
+
+	// Open watermark image
+	rootDir, _ := os.Getwd()
+	watermarkImage, err := vips.NewImageFromFile(filepath.Join(rootDir, "resources", "watermark.png"))
+	if err != nil {
+		panic(fmt.Errorf("add_watermark_err: opening watermark image: %v", err))
+	}
+	defer watermarkImage.Close()
+
+	// Resize watermark image to fit the original image
+	err = watermarkImage.ResizeWithVScale(
+		float64(originalImage.Width())/float64(watermarkImage.Width()),
+		float64(originalImage.Height())/float64(watermarkImage.Height()),
+		vips.KernelLanczos3,
+	)
+	if err != nil {
+		panic(fmt.Errorf("add_watermark_err: resizing watermark: %v", err))
+	}
+
+	// Composite
+	err = originalImage.Composite(watermarkImage, vips.BlendModeAdd, 0, 0)
+	if err != nil {
+		panic(fmt.Errorf("add_watermark_err: compositing watermark: %v", err))
+	}
+
+	// Get the buffer of the result
+	resultBuffer, _, _ := originalImage.ExportNative()
+
+	return resultBuffer
 }

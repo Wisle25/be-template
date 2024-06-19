@@ -54,7 +54,7 @@ func CreateServer(config *commons.Config) *fiber.App {
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000",
 		AllowHeaders:     "Origin, Content-Type, Accept",
-		AllowMethods:     "*",
+		AllowMethods:     "POST,GET,PUT,DELETE",
 		AllowCredentials: true,
 	}))
 

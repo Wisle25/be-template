@@ -66,16 +66,17 @@ func GetTableDB[T any](rows *sql.Rows) []T {
 
 		// Scan the row into the struct fields.
 		if err := rows.Scan(columns...); err != nil {
-			log.Fatalf("Error scanning row: %v", err)
+			log.Printf("Error scanning row: %v", err)
 			return nil // Return nil if there is an error
 		}
 
 		// Append the struct to the table slice.
 		table = append(table, data)
+		log.Printf("Scanned row: %+v", data)
 	}
 
 	if err := rows.Err(); err != nil {
-		log.Fatalf("Error reading rows: %v", err)
+		log.Printf("Error reading rows: %v", err)
 		return nil // Return nil if there is an error
 	}
 

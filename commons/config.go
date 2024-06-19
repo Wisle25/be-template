@@ -23,9 +23,11 @@ type Config struct {
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 
 	// Server configuration
-	AppEnv       string `mapstructure:"APP_ENV"`
-	ServerPort   string `mapstructure:"PORT"`
-	ClientOrigin string `mapstructure:"CLIENT_ORIGIN"`
+	AppEnv         string `mapstructure:"APP_ENV"`
+	ServerProtocol string `mapstructure:"PROTOCOL"`
+	ServerHost     string `mapstructure:"HOSt"`
+	ServerPort     string `mapstructure:"PORT"`
+	ClientOrigin   string `mapstructure:"CLIENT_ORIGIN"`
 
 	// JWT Tokens configuration
 	AccessTokenPrivateKey string        `mapstructure:"ACCESS_TOKEN_PRIVATE_KEY"`
