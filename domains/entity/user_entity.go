@@ -31,3 +31,10 @@ type User struct {
 	Email      string `json:"email"`      // Email address of the user, Email should be unique
 	AvatarLink string `json:"avatarLink"` // AvatarLink to the user's avatar image
 }
+
+// EmailPayload represents the data required to send an email.
+type EmailPayload struct {
+	To      string // Recipient email address
+	Subject string // Subject of the email
+	Body    string // Body of the email
+}

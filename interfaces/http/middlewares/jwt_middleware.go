@@ -2,9 +2,11 @@
 
 import (
 	"encoding/json"
-	"fmt"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
+	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/domains/entity"
 )
 
@@ -20,23 +22,31 @@ func NewJwtMiddleware(userUseCase *use_case.UserUseCase) *JwtMiddleware {
 
 func (m *JwtMiddleware) GuardJWT(c *fiber.Ctx) error {
 	// Getting access token
-	accessToken := c.Cookies("access_token")
+	var accessToken string
 
-	if accessToken == "" {
-		return fiber.NewError(fiber.StatusUnauthorized, "You are not logged in!")
+	if c.Locals("isMobile").(bool) {
+		accessToken = strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
+	} else {
+		accessToken = c.Cookies("access_token") // From cookies
+
 	}
 
+	if accessToken == "" {
+		commons.ThrowClientError(fiber.StatusUnauthorized, "You are not logged in!")
+	}
+
+	// Verifying access token
 	userInfoJSON, accessTokenDetail := m.userUseCase.ExecuteGuard(accessToken)
 
 	if userInfoJSON == nil {
-		return fiber.NewError(fiber.StatusUnauthorized, "Session invalid or expired!")
+		commons.ThrowClientError(fiber.StatusUnauthorized, "Session invalid or expired!")
 	}
 
 	// Unmarshal userInfo JSON
 	var userInfo entity.User
 	err := json.Unmarshal([]byte(userInfoJSON.(string)), &userInfo)
 	if err != nil {
-		panic(fmt.Errorf("refresh_token_err: unable to unmarshal json user info: %v", err))
+		commons.ThrowServerError("refresh_token_err: unable to unmarshal json user info: %v", err)
 	}
 
 	// Add additional information

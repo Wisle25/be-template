@@ -19,18 +19,17 @@ func NewUserHandler(useCase *use_case.UserUseCase) *UserHandler {
 	}
 }
 
-func (h *UserHandler) AddUser(c *fiber.Ctx) error {
+func (h *UserHandler) RegisterUser(c *fiber.Ctx) error {
 	// Payload
 	var payload entity.RegisterUserPayload
 	_ = c.BodyParser(&payload)
 
 	// Use Case
-	returnedId := h.useCase.ExecuteAdd(&payload)
+	h.useCase.ExecuteRegister(&payload)
 
 	// Response
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"status":  "success",
-		"data":    returnedId,
 		"message": "Successfully registering new user! Welcome!",
 	})
 }
@@ -43,26 +42,29 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	// Use Case
 	accessTokenDetail, refreshTokenDetail := h.useCase.ExecuteLogin(&payload)
 
-	// Insert the tokens to cookies
-	c.Cookie(&fiber.Cookie{
-		Name:     "access_token",
-		Value:    accessTokenDetail.Token,
-		Path:     "/",
-		MaxAge:   accessTokenDetail.MaxAge,
-		Secure:   true,
-		HTTPOnly: true,
-		Domain:   "localhost",
-	})
+	// Insert the tokens to
+	if c.Locals("isMobile").(bool) {
+		// Headers if its mobile
+		c.Set("Authorization", fmt.Sprintf("Bearer %s", accessTokenDetail.Token))
+		c.Set("X-Refresh-Token", refreshTokenDetail.Token)
+	} else {
+		// Cookies if its web
+		c.Cookie(&fiber.Cookie{
+			Name:     "access_token",
+			Value:    accessTokenDetail.Token,
+			MaxAge:   accessTokenDetail.MaxAge,
+			Secure:   true,
+			HTTPOnly: true,
+		})
 
-	c.Cookie(&fiber.Cookie{
-		Name:     "refresh_token",
-		Value:    refreshTokenDetail.Token,
-		Path:     "/",
-		MaxAge:   refreshTokenDetail.MaxAge,
-		Secure:   true,
-		HTTPOnly: true,
-		Domain:   "localhost",
-	})
+		c.Cookie(&fiber.Cookie{
+			Name:     "refresh_token",
+			Value:    refreshTokenDetail.Token,
+			MaxAge:   refreshTokenDetail.MaxAge,
+			Secure:   true,
+			HTTPOnly: true,
+		})
+	}
 
 	// Response
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -73,7 +75,12 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 
 func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 	// Payload
-	refreshToken := c.Cookies("refresh_token")
+	var refreshToken string
+	if c.Locals("isMobile").(bool) {
+		refreshToken = c.Get("X-Refresh-Token")
+	} else {
+		refreshToken = c.Cookies("refresh_token")
+	}
 
 	// Use Case
 	accessTokenDetail := h.useCase.ExecuteRefreshToken(refreshToken)
@@ -82,11 +89,9 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "access_token",
 		Value:    accessTokenDetail.Token,
-		Path:     "/",
 		MaxAge:   accessTokenDetail.MaxAge,
 		Secure:   true,
 		HTTPOnly: true,
-		Domain:   "localhost",
 	})
 
 	// Response
@@ -97,7 +102,13 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	// Payload
-	refreshToken := c.Cookies("refresh_token")
+	var refreshToken string
+	if c.Locals("isMobile").(bool) {
+		refreshToken = c.Get("X-Refresh-Token")
+	} else {
+		refreshToken = c.Cookies("refresh_token")
+	}
+
 	accessTokenId := c.Locals("accessTokenId").(string)
 
 	// Use Case
@@ -106,21 +117,34 @@ func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	// Remove from cookie
 	expiredTime := time.Now().Add(-time.Hour * 24)
 
-	c.Cookie(&fiber.Cookie{
-		Name:    "access_token",
-		Value:   "",
-		Expires: expiredTime,
-	})
-	c.Cookie(&fiber.Cookie{
-		Name:    "refresh_token",
-		Value:   "",
-		Expires: expiredTime,
-	})
+	if !c.Locals("isMobile").(bool) {
+		c.Cookie(&fiber.Cookie{
+			Name:    "access_token",
+			Value:   "",
+			Expires: expiredTime,
+		})
+		c.Cookie(&fiber.Cookie{
+			Name:    "refresh_token",
+			Value:   "",
+			Expires: expiredTime,
+		})
+	}
 
 	// Response
 	return c.Status(200).JSON(fiber.Map{
 		"status":  "success",
 		"message": "Successfully logged out!",
+	})
+}
+
+func (h *UserHandler) GetAllUsers(c *fiber.Ctx) error {
+	// Use Case
+	users := h.useCase.ExecuteGetAll()
+
+	// Response
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"status": "success",
+		"data":   users,
 	})
 }
 

@@ -3,14 +3,14 @@
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/generator"
+	"github.com/wisle25/be-template/commons"
 	"io"
 )
 
-type MinioFileUpload struct {
+type MinioFileUpload struct /* implements FileUpload */ {
 	minio       *minio.Client
 	idGenerator generator.IdGenerator
 	bucketName  string
@@ -52,7 +52,7 @@ func (m *MinioFileUpload) UploadFile(buffer []byte, extension string) string {
 		uploadOpts,
 	)
 	if err != nil {
-		panic(fmt.Errorf("minio: upload file err: %v", err))
+		commons.ThrowServerError("minio: upload file err", err)
 	}
 
 	return newName
@@ -64,14 +64,14 @@ func (m *MinioFileUpload) GetFile(filename string) []byte {
 	// Get from minio
 	object, err := m.minio.GetObject(ctx, m.bucketName, filename, minio.GetObjectOptions{})
 	if err != nil {
-		panic(fmt.Errorf("minio: get file from minio err: %v", err))
+		commons.ThrowServerError("minio: get file err", err)
 	}
 
 	// Convert to bytes buffer
 	buffer := new(bytes.Buffer)
 	_, err = io.Copy(buffer, object)
 	if err != nil {
-		panic(fmt.Errorf("minio: get file convert buffer err: %v", err))
+		commons.ThrowServerError("minio: copy file err", err)
 	}
 
 	return buffer.Bytes()
@@ -84,6 +84,6 @@ func (m *MinioFileUpload) RemoveFile(oldFileLink string) {
 	removeOpts := minio.RemoveObjectOptions{}
 	err := m.minio.RemoveObject(ctx, m.bucketName, oldFileLink, removeOpts)
 	if err != nil {
-		panic(fmt.Errorf("minio: remove file err: %v", err))
+		commons.ThrowServerError("minio: remove file err", err)
 	}
 }

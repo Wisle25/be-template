@@ -2,7 +2,6 @@
 
 import (
 	"context"
-	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/wisle25/be-template/commons"
@@ -22,7 +21,7 @@ func NewMinio(config *commons.Config) (*minio.Client, string) {
 		Secure: useSSL,
 	})
 	if err != nil {
-		panic(fmt.Errorf("new minio client: init: %w", err))
+		commons.ThrowServerError("new_minio: init:", err)
 	}
 
 	// Make new bucket
@@ -33,9 +32,9 @@ func NewMinio(config *commons.Config) (*minio.Client, string) {
 		exists, errBucketExists := minioClient.BucketExists(ctx, config.MinioBucket)
 
 		if errBucketExists == nil && exists {
-			log.Printf("Bucket %s is already exists", config.MinioBucket)
+			log.Printf("new_minio: Bucket %s is already exists", config.MinioBucket)
 		} else {
-			panic(fmt.Errorf("create bucket %s: %w", config.MinioBucket, err))
+			commons.ThrowServerError("new_minio: create bucket", err)
 		}
 	} else {
 		log.Printf("Bucket %s is created", config.MinioBucket)

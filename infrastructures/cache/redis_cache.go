@@ -3,13 +3,12 @@
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/redis/go-redis/v9"
 	"github.com/wisle25/be-template/applications/cache"
+	"github.com/wisle25/be-template/commons"
 	"time"
 )
 
-// RedisCache implements Cache
 type RedisCache struct /* implements Cache */ {
 	redis *redis.Client
 }
@@ -25,7 +24,7 @@ func (r *RedisCache) SetCache(key string, value interface{}, expiration time.Dur
 	err := r.redis.Set(ctx, key, value, expiration).Err()
 
 	if err != nil {
-		panic(fmt.Errorf("redis_cache_err: set cache: %v", err))
+		commons.ThrowServerError("redis_cache_err: set cache:", err)
 	}
 }
 
@@ -37,7 +36,7 @@ func (r *RedisCache) GetCache(key string) interface{} {
 		if errors.Is(err, redis.Nil) {
 			return nil
 		} else {
-			panic(fmt.Errorf("redis_cache_err: get cache: %v", err))
+			commons.ThrowServerError("redis_cache_err: get cache:", err)
 		}
 	}
 
@@ -48,6 +47,6 @@ func (r *RedisCache) DeleteCache(key string) {
 	ctx := context.TODO()
 	err := r.redis.Del(ctx, key).Err()
 	if err != nil {
-		panic(fmt.Errorf("redis_cache_err: delete cache: %v", err))
+		commons.ThrowServerError("redis_cache_err: delete cache:", err)
 	}
 }

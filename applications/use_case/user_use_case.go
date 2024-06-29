@@ -2,7 +2,6 @@ package use_case
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/wisle25/be-template/applications/cache"
 	"github.com/wisle25/be-template/applications/file_statics"
 	"github.com/wisle25/be-template/applications/security"
@@ -11,6 +10,7 @@ import (
 	"github.com/wisle25/be-template/domains/entity"
 	"github.com/wisle25/be-template/domains/repository"
 	"io"
+	"path"
 	"time"
 )
 
@@ -48,17 +48,15 @@ func NewUserUseCase(
 	}
 }
 
-// ExecuteAdd Handling user registration.
+// ExecuteRegister Handling user registration.
 // Should raise panic if violates username/email uniqueness.
 // Returning registered user's ID.
-func (uc *UserUseCase) ExecuteAdd(payload *entity.RegisterUserPayload) string {
+func (uc *UserUseCase) ExecuteRegister(payload *entity.RegisterUserPayload) {
 	uc.validator.ValidateRegisterPayload(payload)
 
 	payload.Password = uc.passwordHash.Hash(payload.Password)
 
-	registeredId := uc.userRepository.AddUser(payload)
-
-	return registeredId
+	uc.userRepository.RegisterUser(payload)
 }
 
 // ExecuteLogin Handling user login. Returning user's token for authentication/authorization later.
@@ -78,7 +76,7 @@ func (uc *UserUseCase) ExecuteLogin(payload *entity.LoginUserPayload) (*entity.T
 	// Add tokens to the cache
 	userInfoJSON, err := json.Marshal(userInfo)
 	if err != nil {
-		panic(fmt.Errorf("login_err: unable to marshal json user info: %v", err))
+		commons.ThrowServerError("login_err: unable to marshal json user info", err)
 	}
 
 	now := time.Now()
@@ -101,7 +99,7 @@ func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *entity.T
 	var userInfo entity.User
 	err := json.Unmarshal([]byte(userInfoJSON), &userInfo)
 	if err != nil {
-		panic(fmt.Errorf("refresh_token_err: unable to unmarshal json user info: %v", err))
+		commons.ThrowServerError("refresh_token_err: unable to unmarshal json user info", err)
 	}
 
 	// Re-create access token and re-insert to the cache
@@ -111,6 +109,11 @@ func (uc *UserUseCase) ExecuteRefreshToken(currentRefreshToken string) *entity.T
 
 	// Returned token should be added to HTTP Cookie
 	return accessTokenDetail
+}
+
+// ExecuteGetAll simply get all registered users
+func (uc *UserUseCase) ExecuteGetAll() []entity.User {
+	return uc.userRepository.GetAllUsers()
 }
 
 // ExecuteLogout handles user logout by removing the tokens from the cache.
@@ -148,6 +151,7 @@ func (uc *UserUseCase) ExecuteUpdateUserById(userId string, payload *entity.Upda
 	}
 
 	newAvatarLink := ""
+
 	// Handling avatar file
 	if payload.Avatar != nil {
 		file, _ := payload.Avatar.Open()
@@ -155,6 +159,10 @@ func (uc *UserUseCase) ExecuteUpdateUserById(userId string, payload *entity.Upda
 
 		compressedBuffer, extension := uc.fileProcessing.CompressImage(fileBuffer, file_statics.WEBP)
 		newAvatarLink = uc.fileUpload.UploadFile(compressedBuffer, extension)
+
+		// Adjust the link to be added with Minio
+		minioUrl := uc.config.MinioUrl + uc.config.MinioBucket + "/"
+		newAvatarLink = minioUrl + newAvatarLink
 	}
 
 	// Updating user's repository
@@ -162,6 +170,6 @@ func (uc *UserUseCase) ExecuteUpdateUserById(userId string, payload *entity.Upda
 
 	// If exists, remove user's old avatar
 	if oldAvatarLink != "" {
-		uc.fileUpload.RemoveFile(oldAvatarLink)
+		uc.fileUpload.RemoveFile(path.Base(oldAvatarLink))
 	}
 }

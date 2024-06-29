@@ -1,14 +1,14 @@
 ﻿package file_statics
 
 import (
-	"fmt"
 	"github.com/davidbyttow/govips/v2/vips"
 	"github.com/wisle25/be-template/applications/file_statics"
+	"github.com/wisle25/be-template/commons"
 	"os"
 	"path/filepath"
 )
 
-type VipsFileProcessing struct {
+type VipsFileProcessing struct /* implements FileProcessing */ {
 }
 
 func NewVipsFileProcessing() file_statics.FileProcessing {
@@ -27,7 +27,7 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.Conver
 
 	image, err := vips.NewImageFromBuffer(buffer)
 	if err != nil {
-		panic(fmt.Errorf("vips: new compress image: %v", err))
+		commons.ThrowServerError("vips: new compress image", err)
 	}
 
 	switch to {
@@ -37,7 +37,7 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.Conver
 		options.StripMetadata = true
 		result, _, err = image.ExportJpeg(options)
 		if err != nil {
-			panic(fmt.Errorf("vips: compress image jpeg: %v", err))
+			commons.ThrowServerError("vips: compress image jpeg", err)
 		}
 
 		extension = ".jpg"
@@ -49,7 +49,7 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.Conver
 
 		result, _, err = image.ExportWebp(options)
 		if err != nil {
-			panic(fmt.Errorf("vips: compress image webp: %v", err))
+			commons.ThrowServerError("vips: compress image webp", err)
 		}
 
 		extension = ".webp"
@@ -62,7 +62,7 @@ func (v *VipsFileProcessing) AddWatermark(buffer []byte) []byte {
 	// Open original image
 	originalImage, err := vips.NewImageFromBuffer(buffer)
 	if err != nil {
-		panic(fmt.Errorf("add_watermark_err: opening original image: %v", err))
+		commons.ThrowServerError("add_watermark_err: opening original image", err)
 	}
 	defer originalImage.Close()
 
@@ -70,7 +70,7 @@ func (v *VipsFileProcessing) AddWatermark(buffer []byte) []byte {
 	rootDir, _ := os.Getwd()
 	watermarkImage, err := vips.NewImageFromFile(filepath.Join(rootDir, "resources", "watermark.png"))
 	if err != nil {
-		panic(fmt.Errorf("add_watermark_err: opening watermark image: %v", err))
+		commons.ThrowServerError("add_watermark_err: opening watermark image", err)
 	}
 	defer watermarkImage.Close()
 
@@ -81,13 +81,13 @@ func (v *VipsFileProcessing) AddWatermark(buffer []byte) []byte {
 		vips.KernelLanczos3,
 	)
 	if err != nil {
-		panic(fmt.Errorf("add_watermark_err: resizing watermark: %v", err))
+		commons.ThrowServerError("add_watermark_err: resizing watermark", err)
 	}
 
 	// Composite
 	err = originalImage.Composite(watermarkImage, vips.BlendModeAdd, 0, 0)
 	if err != nil {
-		panic(fmt.Errorf("add_watermark_err: compositing watermark: %v", err))
+		commons.ThrowServerError("add_watermark_err: compositing watermark", err)
 	}
 
 	// Get the buffer of the result

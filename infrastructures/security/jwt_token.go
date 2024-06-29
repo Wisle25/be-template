@@ -4,12 +4,14 @@ package security
 import (
 	"encoding/base64"
 	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/applications/security"
+	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/domains/entity"
-	"time"
 )
 
 // JwtToken struct provides methods for creating and validating token using JWT.
@@ -40,13 +42,13 @@ func (jt *JwtToken) CreateToken(userToken *entity.User, ttl time.Duration, priva
 	// Decode the private key
 	decodedPrivateKey, err := base64.StdEncoding.DecodeString(privateKey)
 	if err != nil {
-		panic(fmt.Errorf("create_token_err: couldn't decode token private key: %v", err))
+		commons.ThrowServerError("create_token_err: couldn't decode token private key", err)
 	}
 
 	// Parse the private key
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(decodedPrivateKey)
 	if err != nil {
-		panic(fmt.Errorf("create_token_err: couldn't parse token private key: %v", err))
+		commons.ThrowServerError("create_token_err: couldn't parse token private key", err)
 	}
 
 	// Define JWT claims
@@ -64,7 +66,7 @@ func (jt *JwtToken) CreateToken(userToken *entity.User, ttl time.Duration, priva
 	// Create and sign the JWT token
 	td.Token, err = jwt.NewWithClaims(jwt.SigningMethodRS256, atClaims).SignedString(key)
 	if err != nil {
-		panic(fmt.Errorf("create_token_err: signing token error: %v", err))
+		commons.ThrowServerError("create_token_err: signing token error", err)
 	}
 
 	return td
@@ -83,26 +85,26 @@ func (jt *JwtToken) ValidateToken(token string, publicKey string) *entity.TokenD
 	// Decode the public key
 	decodedPublicKey, err := base64.StdEncoding.DecodeString(publicKey)
 	if err != nil {
-		panic(fmt.Errorf("validate_token_err: couldn't decode: %v", err))
+		commons.ThrowServerError("validate_token_err: couldn't decode", err)
 	}
 
 	// Parse the public key
 	key, err := jwt.ParseRSAPublicKeyFromPEM(decodedPublicKey)
 	if err != nil {
-		panic(fmt.Errorf("validate_token_err: couldn't parse: %v", err))
+		commons.ThrowServerError("validate_token_err: couldn't parse", err)
 	}
 
 	// Parse and validate the JWT token
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
-			panic(fmt.Errorf("validate_token_err: unexpected method: %s", t.Header["alg"]))
+			commons.ThrowServerError("validate_token_err: unexpected method", nil)
 		}
 
 		return key, nil
 	})
 
 	if err != nil {
-		panic(fmt.Errorf("validate_token_err: %v", err))
+		commons.ThrowServerError("validate_token_err", err)
 	}
 
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)

@@ -168,10 +168,10 @@ func TestUserUseCase(t *testing.T) {
 
 		mockValidator.On("ValidateRegisterPayload", payload).Return(nil)
 		mockPasswordHash.On("Hash", payload.Password).Return("hashedpassword")
-		mockUserRepo.On("AddUser", payload).Return("userid123")
+		mockUserRepo.On("RegisterUser", payload).Return("userid123")
 
 		// Action
-		userId := userUseCase.ExecuteAdd(payload)
+		userId := userUseCase.ExecuteRegister(payload)
 
 		// Assert
 		assert.Equal(t, "userid123", userId)

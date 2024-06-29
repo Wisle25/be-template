@@ -3,12 +3,14 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+	"github.com/wisle25/be-template/infrastructures/services"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/generator"
+	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/domains/entity"
 	"github.com/wisle25/be-template/domains/repository"
-	"strings"
 )
 
 type UserRepositoryPG struct /* implements UserRepository */ {
@@ -23,36 +25,30 @@ func NewUserRepositoryPG(db *sql.DB, idGenerator generator.IdGenerator) reposito
 	}
 }
 
-func (r *UserRepositoryPG) AddUser(payload *entity.RegisterUserPayload) string {
+func (r *UserRepositoryPG) RegisterUser(payload *entity.RegisterUserPayload) {
 	// Create ID
 	id := r.idGenerator.Generate()
 
 	// Query
-	query := `INSERT INTO 
-    			users(id, username, password, email) 
-			  VALUES
-			      ($1, $2, $3, $4)
-			  RETURNING id`
+	query := `INSERT INTO users(id, username, password, email) 
+			  VALUES ($1, $2, $3, $4)`
 
-	var returnedId string
-	err := r.db.QueryRow(
+	_, err := r.db.Exec(
 		query,
 		id,
 		payload.Username,
 		payload.Password,
 		payload.Email,
-	).Scan(&returnedId)
+	)
 
 	// Evaluate
 	if err != nil {
 		if strings.Contains(err.Error(), "unique constraint") {
-			panic(fiber.NewError(fiber.StatusConflict, "Username or Email already exists!"))
+			commons.ThrowClientError(fiber.StatusConflict, "Username or Email already exists!")
 		}
 
-		panic(fmt.Errorf("user_repo_pg_error: add user: %v", err))
+		commons.ThrowServerError("user_repo_pg: add user", err)
 	}
-
-	return returnedId
 }
 
 func (r *UserRepositoryPG) GetUserForLogin(identity string) (*entity.User, string) {
@@ -80,9 +76,9 @@ func (r *UserRepositoryPG) GetUserForLogin(identity string) (*entity.User, strin
 	// Evaluate
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			panic(fiber.NewError(fiber.StatusNotFound, "User not found!"))
+			commons.ThrowClientError(fiber.StatusNotFound, "User not found!")
 		} else {
-			panic(fmt.Errorf("user_repo_pg_error: get userId by identity %v", err))
+			commons.ThrowServerError("user_repo_pg: get user for login", err)
 		}
 	}
 
@@ -104,13 +100,32 @@ func (r *UserRepositoryPG) GetUserById(id string) *entity.User {
 	// Evaluate
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			panic(fiber.NewError(fiber.StatusNotFound, "User not found!"))
+			commons.ThrowClientError(fiber.StatusNotFound, "User not found!")
 		}
 
-		panic(fmt.Errorf("user_repo_pg_error: get userId by id %v", err))
+		commons.ThrowServerError("user_repo_pg: get userId by i", err)
 	}
 
 	return &result
+}
+
+func (r *UserRepositoryPG) GetAllUsers() []entity.User {
+	// Query
+	query := `
+			SELECT
+				id,
+				username,
+				email,
+				avatar_link
+			FROM users`
+	rows, err := r.db.Query(query)
+
+	// Evaluate
+	if err != nil {
+		commons.ThrowServerError("user_repo_pg: get all users", err)
+	}
+
+	return services.GetTableDB[entity.User](rows)
 }
 
 func (r *UserRepositoryPG) UpdateUserById(id string, payload *entity.UpdateUserPayload, newAvatarLink string) string {
@@ -144,12 +159,12 @@ func (r *UserRepositoryPG) UpdateUserById(id string, payload *entity.UpdateUserP
 	// Evaluate
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			panic(fiber.NewError(fiber.StatusNotFound, "User not found!"))
+			commons.ThrowClientError(fiber.StatusNotFound, "User not found!")
 		}
 		if strings.Contains(err.Error(), "unique constraint") {
-			panic(fiber.NewError(fiber.StatusConflict, "Username or Email already exists!"))
+			commons.ThrowClientError(fiber.StatusConflict, "Username or Email already exists!")
 		}
-		panic(fmt.Errorf("user_repo_pg_error: update user: %v", err))
+		commons.ThrowServerError("user_repo_pg: update user", err)
 	}
 
 	return oldAvatarLink

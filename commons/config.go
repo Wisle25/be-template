@@ -25,7 +25,7 @@ type Config struct {
 	// Server configuration
 	AppEnv         string `mapstructure:"APP_ENV"`
 	ServerProtocol string `mapstructure:"PROTOCOL"`
-	ServerHost     string `mapstructure:"HOSt"`
+	ServerHost     string `mapstructure:"HOST"`
 	ServerPort     string `mapstructure:"PORT"`
 	ClientOrigin   string `mapstructure:"CLIENT_ORIGIN"`
 
@@ -41,11 +41,18 @@ type Config struct {
 	RefreshTokenMaxAge     int           `mapstructure:"REFRESH_TOKEN_MAXAGE"`
 
 	// Minio
+	MinioUrl       string `mapstructure:"MINIO_URL"`
 	MinioEndpoint  string `mapstructure:"MINIO_ENDPOINT"`
 	MinioAccessKey string `mapstructure:"MINIO_ACCESS_KEY"`
 	MinioSecretKey string `mapstructure:"MINIO_SECRET_KEY"`
 	MinioBucket    string `mapstructure:"MINIO_BUCKET"`
 	MinioLocation  string `mapstructure:"MINIO_LOCATION"`
+
+	// SMTP
+	SmtpHost     string `mapstructure:"SMTP_HOST"`
+	SmtpPort     string `mapstructure:"SMTP_PORT"`
+	SmtpUsername string `mapstructure:"SMTP_USERNAME"`
+	SmtpPassword string `mapstructure:"SMTP_PASSWORD"`
 }
 
 // LoadConfig loads configuration from the specified path.
@@ -53,7 +60,6 @@ type Config struct {
 // Returns the loaded config and an error if any.
 func LoadConfig(path string) *Config {
 	viper.AutomaticEnv()
-
 	var err error
 
 	viper.AddConfigPath(path)

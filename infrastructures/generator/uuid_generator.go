@@ -1,9 +1,9 @@
 ﻿package generator
 
 import (
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/wisle25/be-template/applications/generator"
+	"github.com/wisle25/be-template/commons"
 )
 
 // UUIDGenerator implements IdGenerator using UUID
@@ -18,7 +18,7 @@ func NewUUIDGenerator() generator.IdGenerator {
 func (generator *UUIDGenerator) Generate() string {
 	id, err := uuid.NewV7()
 	if err != nil {
-		panic(fmt.Errorf("id_generator_err: generate: %v", err))
+		commons.ThrowServerError("id_generator_err: generate", err)
 	}
 
 	return id.String()

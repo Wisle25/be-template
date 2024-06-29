@@ -2,6 +2,7 @@
 
 import (
 	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -49,12 +50,13 @@ func CreateServer(config *commons.Config) *fiber.App {
 	})
 
 	// Middlewares
+	app.Use(middlewares.NewPlatformMiddleware)
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000",
+		AllowOrigins:     config.ClientOrigin,
 		AllowHeaders:     "Origin, Content-Type, Accept",
-		AllowMethods:     "POST,GET,PUT,DELETE",
+		AllowMethods:     "POST,GET,PUT,DELETE,PATCH,OPTIONS",
 		AllowCredentials: true,
 	}))
 

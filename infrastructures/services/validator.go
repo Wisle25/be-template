@@ -3,13 +3,15 @@ package services
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	en2 "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v2"
-	"reflect"
-	"strings"
+	"github.com/wisle25/be-template/commons"
 )
 
 type Validation struct {
@@ -36,7 +38,7 @@ func NewValidation() *Validation {
 	})
 
 	if err != nil {
-		panic(fmt.Errorf("new_validation: overriding eq trans: %v", err))
+		commons.ThrowServerError("new_validation: overriding eq trans", err)
 	}
 
 	return &Validation{
@@ -85,10 +87,10 @@ func Validate(s interface{}, schema map[string]string, v *Validation) {
 	}
 
 	if isError {
-		panic(fiber.NewError(
+		commons.ThrowClientError(
 			fiber.StatusBadRequest,
-			"Invalid request payload!\n"+
+			"Invalid payload!\n"+
 				strings.Join(messages, ";"),
-		))
+		)
 	}
 }

@@ -31,9 +31,9 @@ func TestUserRepository(t *testing.T) {
 		Email:    "hand@gmail.com",
 	}
 
-	t.Run("AddUser", func(t *testing.T) {
+	t.Run("RegisterUser", func(t *testing.T) {
 		// Action
-		responseId := userRepositoryPG.AddUser(payload)
+		responseId := userRepositoryPG.RegisterUser(payload)
 
 		// Assert
 		usersList := userHelperDb.GetUsers()

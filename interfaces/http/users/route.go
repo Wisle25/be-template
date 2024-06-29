@@ -13,11 +13,12 @@ func NewUserRouter(
 ) {
 	userHandler := NewUserHandler(useCase)
 
-	app.Post("/users", userHandler.AddUser)
+	app.Post("/users", userHandler.RegisterUser)
 	app.Post("/auths", userHandler.Login)
 	app.Get("/auths", jwtMiddleware.GuardJWT, userHandler.GetLoggedUser)
 	app.Put("/auths", userHandler.RefreshToken)
 	app.Delete("/auths", jwtMiddleware.GuardJWT, userHandler.Logout)
+	app.Get("/users", userHandler.GetAllUsers)
 	app.Get("/users/:id", userHandler.GetUserById)
 	app.Put("/users/:id", jwtMiddleware.GuardJWT, userHandler.UpdateUserById)
 }

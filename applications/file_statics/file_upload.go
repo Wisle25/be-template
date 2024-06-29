@@ -7,7 +7,7 @@ type FileUpload interface {
 	// Returning uploaded link.
 	UploadFile(buffer []byte, extension string) string
 
-	// GetFile Getting the object as buffer
+	// GetFile Getting the object file as buffer
 	GetFile(fileName string) []byte
 
 	// RemoveFile deleting specified file by its link
