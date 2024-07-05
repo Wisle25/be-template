@@ -1,8 +1,8 @@
-﻿package file_statics
+﻿package file_handling
 
 import (
 	"github.com/davidbyttow/govips/v2/vips"
-	"github.com/wisle25/be-template/applications/file"
+	"github.com/wisle25/be-template/applications/file_handling"
 	"github.com/wisle25/be-template/commons"
 	"os"
 	"path/filepath"
@@ -12,12 +12,12 @@ type VipsFileProcessing struct /* implements FileProcessing */ {
 
 }
 
-func NewVipsFileProcessing() file.FileProcessing {
+func NewVipsFileProcessing() file_handling.FileProcessing {
 	vips.Startup(nil)
 	return &VipsFileProcessing{}
 }
 
-func (v *VipsFileProcessing) CompressImage(buffer []byte, to file.ConvertTo) ([]byte, string) {
+func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_handling.ConvertTo) ([]byte, string) {
 	if buffer == nil {
 		return nil, ""
 	}
@@ -26,13 +26,15 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file.ConvertTo) ([]
 	var extension string
 	var err error
 
+	// Open Image
 	image, err := vips.NewImageFromBuffer(buffer)
 	if err != nil {
 		commons.ThrowServerError("vips: new compress image", err)
 	}
 
+	// Compressing depends on what the option
 	switch to {
-	case file.JPG:
+	case file_handling.JPG:
 		options := vips.NewJpegExportParams()
 		options.Quality = 40
 		options.StripMetadata = true
@@ -42,7 +44,7 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file.ConvertTo) ([]
 		}
 
 		extension = ".jpg"
-	case file.WEBP:
+	case file_handling.WEBP:
 		options := vips.NewWebpExportParams()
 		options.Quality = 40
 		options.StripMetadata = true
@@ -92,7 +94,10 @@ func (v *VipsFileProcessing) AddWatermark(buffer []byte) []byte {
 	}
 
 	// Get the buffer of the result
-	resultBuffer, _, _ := originalImage.ExportNative()
+	resultBuffer, _, err := originalImage.ExportNative()
+	if err != nil {
+		commons.ThrowServerError("add_watermark_err: export native", err)
+	}
 
 	return resultBuffer
 }

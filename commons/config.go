@@ -11,11 +11,11 @@ import (
 type Config struct {
 	// Database configuration
 	DBHost         string `mapstructure:"POSTGRES_HOST"`
+	DBPort         string `mapstructure:"POSTGRES_PORT"`
 	DBUserName     string `mapstructure:"POSTGRES_USER"`
 	DBUserPassword string `mapstructure:"POSTGRES_PASSWORD"`
 	DBName         string `mapstructure:"POSTGRES_DB"`
 	DBNameTest     string `mapstructure:"POSTGRES_DB_TEST"`
-	DBPort         string `mapstructure:"POSTGRES_PORT"`
 
 	// Redis
 	RedisHost     string `mapstructure:"REDIS_HOST"`
@@ -66,7 +66,7 @@ func LoadConfig(path string) *Config {
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 
-	// Read the .env file
+	// Read the .env file_handling
 	err = viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("load_config_err: read config: %v", err))

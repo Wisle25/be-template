@@ -3,7 +3,7 @@ package use_case
 import (
 	"encoding/json"
 	"github.com/wisle25/be-template/applications/cache"
-	"github.com/wisle25/be-template/applications/file"
+	"github.com/wisle25/be-template/applications/file_handling"
 	"github.com/wisle25/be-template/applications/security"
 	"github.com/wisle25/be-template/applications/validation"
 	"github.com/wisle25/be-template/commons"
@@ -17,8 +17,8 @@ import (
 // UserUseCase handles the business logic for user operations.
 type UserUseCase struct {
 	userRepository repository.UserRepository
-	fileProcessing file.FileProcessing
-	fileUpload     file.FileUpload
+	fileProcessing file_handling.FileProcessing
+	fileUpload     file_handling.FileUpload
 	passwordHash   security.PasswordHash
 	validator      validation.ValidateUser
 	config         *commons.Config
@@ -28,8 +28,8 @@ type UserUseCase struct {
 
 func NewUserUseCase(
 	userRepository repository.UserRepository,
-	fileProcessing file.FileProcessing,
-	fileUpload file.FileUpload,
+	fileProcessing file_handling.FileProcessing,
+	fileUpload file_handling.FileUpload,
 	passwordHash security.PasswordHash,
 	validator validation.ValidateUser,
 	config *commons.Config,
@@ -152,12 +152,12 @@ func (uc *UserUseCase) ExecuteUpdateUserById(userId string, payload *entity.Upda
 
 	newAvatarLink := ""
 
-	// Handling avatar file
+	// Handling avatar file_handling
 	if payload.Avatar != nil {
 		file, _ := payload.Avatar.Open()
 		fileBuffer, _ := io.ReadAll(file)
 
-		compressedBuffer, extension := uc.fileProcessing.CompressImage(fileBuffer, file.WEBP)
+		compressedBuffer, extension := uc.fileProcessing.CompressImage(fileBuffer, file_handling.WEBP)
 		newAvatarLink = uc.fileUpload.UploadFile(compressedBuffer, extension)
 
 		// Adjust the link to be added with Minio

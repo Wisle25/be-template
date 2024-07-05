@@ -12,7 +12,7 @@ import (
 	"github.com/wisle25/be-template/commons"
 	"github.com/wisle25/be-template/infrastructures/cache"
 	"github.com/wisle25/be-template/infrastructures/container"
-	"github.com/wisle25/be-template/infrastructures/file_statics"
+	"github.com/wisle25/be-template/infrastructures/file_handling"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/services"
 )
@@ -64,8 +64,8 @@ func CreateServer(config *commons.Config) *fiber.App {
 	redisCache := cache.NewRedisCache(redis)
 	uuidGenerator := generator.NewUUIDGenerator()
 	validation := services.NewValidation()
-	minioFileUpload := file_statics.NewMinioFileUpload(minio, uuidGenerator, bucketName)
-	vipsFileProcessing := file_statics.NewVipsFileProcessing()
+	minioFileUpload := file_handling.NewMinioFileUpload(minio, uuidGenerator, bucketName)
+	vipsFileProcessing := file_handling.NewVipsFileProcessing()
 
 	// Use Cases
 	userUseCase := container.NewUserContainer(

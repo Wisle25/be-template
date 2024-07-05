@@ -1,4 +1,4 @@
-﻿package file
+﻿package file_handling
 
 // ConvertTo represents the type to which an image can be converted.
 type ConvertTo int8
@@ -10,8 +10,8 @@ const (
 	JPG
 )
 
-// FileProcessing defines the interface for file processing operations.
-// Any struct that implements this interface can be used to process file.
+// FileProcessing defines the interface for file_handling processing operations.
+// Any struct that implements this interface can be used to process file_handling.
 type FileProcessing interface {
 	// CompressImage compresses the given image buffer to the specified format.
 	// The buffer parameter is the image data in bytes.

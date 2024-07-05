@@ -9,7 +9,7 @@ package container
 import (
 	"database/sql"
 	"github.com/wisle25/be-template/applications/cache"
-	"github.com/wisle25/be-template/applications/file"
+	"github.com/wisle25/be-template/applications/file_handling"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/commons"
@@ -22,7 +22,7 @@ import (
 // Injectors from container.go:
 
 // Dependency Injection for User Use Case
-func NewUserContainer(config *commons.Config, db *sql.DB, cache2 cache.Cache, idGenerator generator.IdGenerator, fileProcessing file.FileProcessing, fileUpload file.FileUpload, validator *services.Validation) *use_case.UserUseCase {
+func NewUserContainer(config *commons.Config, db *sql.DB, cache2 cache.Cache, idGenerator generator.IdGenerator, fileProcessing file_handling.FileProcessing, fileUpload file_handling.FileUpload, validator *services.Validation) *use_case.UserUseCase {
 	userRepository := repository.NewUserRepositoryPG(db, idGenerator)
 	passwordHash := security.NewArgon2()
 	validateUser := validation.NewValidateUser(validator)

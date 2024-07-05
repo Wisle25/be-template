@@ -1,6 +1,6 @@
 ﻿#!/bin/sh
 
-# Load environment variables from .env file if it exists
+# Load environment variables from .env file_handling if it exists
 if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi

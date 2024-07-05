@@ -7,7 +7,7 @@ import (
 	"database/sql"
 	"github.com/google/wire"
 	"github.com/wisle25/be-template/applications/cache"
-	"github.com/wisle25/be-template/applications/file"
+	"github.com/wisle25/be-template/applications/file_handling"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/commons"
@@ -23,8 +23,8 @@ func NewUserContainer(
 	db *sql.DB,
 	cache cache.Cache,
 	idGenerator generator.IdGenerator,
-	fileProcessing file.FileProcessing,
-	fileUpload file.FileUpload,
+	fileProcessing file_handling.FileProcessing,
+	fileUpload file_handling.FileUpload,
 	validator *services.Validation,
 ) *use_case.UserUseCase {
 	wire.Build(

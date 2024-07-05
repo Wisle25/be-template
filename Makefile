@@ -1,12 +1,12 @@
 # Makefile
 
-# Load environment variables from .env file
+# Load environment variables from .env file_handling
 ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
 
-# Path to migration file
+# Path to migration file_handling
 MIGRATIONS_PATH = migrations
 
 # Database URL

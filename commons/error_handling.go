@@ -7,7 +7,6 @@ import (
 )
 
 func ThrowClientError(statusCode int, message string) {
-	log.Printf("%s", message)
 	panic(fiber.NewError(statusCode, message))
 }
 
