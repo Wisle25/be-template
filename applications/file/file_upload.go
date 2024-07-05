@@ -1,4 +1,4 @@
-﻿package file_statics
+﻿package file
 
 // FileUpload handling file uploading, manipulating (like adding watermark), removing, etc
 type FileUpload interface {

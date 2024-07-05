@@ -2,6 +2,8 @@
 
 import (
 	"errors"
+	middlewares2 "github.com/wisle25/be-template/interfaces/middlewares"
+	"github.com/wisle25/be-template/interfaces/users"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -13,8 +15,6 @@ import (
 	"github.com/wisle25/be-template/infrastructures/file_statics"
 	"github.com/wisle25/be-template/infrastructures/generator"
 	"github.com/wisle25/be-template/infrastructures/services"
-	"github.com/wisle25/be-template/interfaces/http/middlewares"
-	"github.com/wisle25/be-template/interfaces/http/users"
 )
 
 func errorHandling(c *fiber.Ctx, err error) error {
@@ -50,7 +50,7 @@ func CreateServer(config *commons.Config) *fiber.App {
 	})
 
 	// Middlewares
-	app.Use(middlewares.NewPlatformMiddleware)
+	app.Use(middlewares2.NewPlatformMiddleware)
 	app.Use(recover.New())
 	app.Use(logger.New())
 	app.Use(cors.New(cors.Config{
@@ -79,7 +79,7 @@ func CreateServer(config *commons.Config) *fiber.App {
 	)
 
 	// Custom Middleware
-	jwtMiddleware := middlewares.NewJwtMiddleware(userUseCase)
+	jwtMiddleware := middlewares2.NewJwtMiddleware(userUseCase)
 
 	// Router
 	users.NewUserRouter(app, jwtMiddleware, userUseCase)

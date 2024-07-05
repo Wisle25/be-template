@@ -33,10 +33,10 @@ func (jt *JwtToken) CreateToken(userToken *entity.User, ttl time.Duration, priva
 
 	// Creating token details
 	td := &entity.TokenDetail{
-		TokenId:   jt.idGenerator.Generate(),
-		UserToken: userToken,
-		ExpiresIn: now.Add(ttl).Unix(),
-		MaxAge:    int(ttl.Seconds()),
+		TokenId:    jt.idGenerator.Generate(),
+		UserDetail: userToken,
+		ExpiresIn:  now.Add(ttl).Unix(),
+		MaxAge:     int(ttl.Seconds()),
 	}
 
 	// Decode the private key
@@ -122,7 +122,7 @@ func (jt *JwtToken) ValidateToken(token string, publicKey string) *entity.TokenD
 	}
 
 	return &entity.TokenDetail{
-		TokenId:   fmt.Sprintf("%s", claims["token_id"]),
-		UserToken: userToken,
+		TokenId:    fmt.Sprintf("%s", claims["token_id"]),
+		UserDetail: userToken,
 	}
 }

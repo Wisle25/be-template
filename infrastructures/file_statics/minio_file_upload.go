@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"github.com/minio/minio-go/v7"
-	"github.com/wisle25/be-template/applications/file_statics"
+	"github.com/wisle25/be-template/applications/file"
 	"github.com/wisle25/be-template/applications/generator"
 	"github.com/wisle25/be-template/commons"
 	"io"
@@ -20,7 +20,7 @@ func NewMinioFileUpload(
 	minio *minio.Client,
 	idGenerator generator.IdGenerator,
 	bucketName string,
-) file_statics.FileUpload {
+) file.FileUpload {
 	return &MinioFileUpload{
 		minio,
 		idGenerator,

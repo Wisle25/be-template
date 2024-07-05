@@ -8,14 +8,14 @@ import (
 	"net/smtp"
 )
 
-type SmtpEmailService struct /* implements EmailService */ {
+type SmtpEmailService struct /* implements Email */ {
 	smtpHost  string
 	smtpPort  string
 	auth      smtp.Auth
 	emailFrom string
 }
 
-func NewStmpEmailService(config *commons.Config) email.EmailService {
+func NewStmpEmailService(config *commons.Config) email.Email {
 	auth := smtp.PlainAuth("", config.SmtpUsername, config.SmtpPassword, config.SmtpHost)
 
 	return &SmtpEmailService{

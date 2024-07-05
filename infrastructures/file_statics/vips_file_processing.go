@@ -2,21 +2,22 @@
 
 import (
 	"github.com/davidbyttow/govips/v2/vips"
-	"github.com/wisle25/be-template/applications/file_statics"
+	"github.com/wisle25/be-template/applications/file"
 	"github.com/wisle25/be-template/commons"
 	"os"
 	"path/filepath"
 )
 
 type VipsFileProcessing struct /* implements FileProcessing */ {
+
 }
 
-func NewVipsFileProcessing() file_statics.FileProcessing {
+func NewVipsFileProcessing() file.FileProcessing {
 	vips.Startup(nil)
 	return &VipsFileProcessing{}
 }
 
-func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.ConvertTo) ([]byte, string) {
+func (v *VipsFileProcessing) CompressImage(buffer []byte, to file.ConvertTo) ([]byte, string) {
 	if buffer == nil {
 		return nil, ""
 	}
@@ -31,7 +32,7 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.Conver
 	}
 
 	switch to {
-	case file_statics.JPG:
+	case file.JPG:
 		options := vips.NewJpegExportParams()
 		options.Quality = 40
 		options.StripMetadata = true
@@ -41,7 +42,7 @@ func (v *VipsFileProcessing) CompressImage(buffer []byte, to file_statics.Conver
 		}
 
 		extension = ".jpg"
-	case file_statics.WEBP:
+	case file.WEBP:
 		options := vips.NewWebpExportParams()
 		options.Quality = 40
 		options.StripMetadata = true

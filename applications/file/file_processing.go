@@ -1,4 +1,4 @@
-﻿package file_statics
+﻿package file
 
 // ConvertTo represents the type to which an image can be converted.
 type ConvertTo int8
@@ -11,7 +11,7 @@ const (
 )
 
 // FileProcessing defines the interface for file processing operations.
-// Any struct that implements this interface can be used to process files.
+// Any struct that implements this interface can be used to process file.
 type FileProcessing interface {
 	// CompressImage compresses the given image buffer to the specified format.
 	// The buffer parameter is the image data in bytes.

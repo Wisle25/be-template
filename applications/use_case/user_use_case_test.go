@@ -1,7 +1,7 @@
 package use_case_test
 
 import (
-	"github.com/wisle25/be-template/applications/file_statics"
+	"github.com/wisle25/be-template/applications/file"
 	"github.com/wisle25/be-template/applications/use_case"
 	"github.com/wisle25/be-template/domains/entity"
 	"io"
@@ -121,7 +121,7 @@ type MockFileProcessing struct {
 	mock.Mock
 }
 
-func (m *MockFileProcessing) CompressImage(buffer []byte, to file_statics.ConvertTo) ([]byte, string) {
+func (m *MockFileProcessing) CompressImage(buffer []byte, to file.ConvertTo) ([]byte, string) {
 	args := m.Called(buffer, to)
 
 	return args.Get(0).([]byte), args.String(1)

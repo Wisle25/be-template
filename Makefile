@@ -6,7 +6,7 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-# Path to migration files
+# Path to migration file
 MIGRATIONS_PATH = migrations
 
 # Database URL

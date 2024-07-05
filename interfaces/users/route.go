@@ -3,7 +3,7 @@
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/wisle25/be-template/applications/use_case"
-	"github.com/wisle25/be-template/interfaces/http/middlewares"
+	"github.com/wisle25/be-template/interfaces/middlewares"
 )
 
 func NewUserRouter(
@@ -13,8 +13,8 @@ func NewUserRouter(
 ) {
 	userHandler := NewUserHandler(useCase)
 
-	app.Post("/users", userHandler.RegisterUser)
-	app.Post("/auths", userHandler.Login)
+	app.Post("/users", userHandler.RegisterUser).Name("Register")
+	app.Post("/auths", userHandler.Login).Name("Login")
 	app.Get("/auths", jwtMiddleware.GuardJWT, userHandler.GetLoggedUser)
 	app.Put("/auths", userHandler.RefreshToken)
 	app.Delete("/auths", jwtMiddleware.GuardJWT, userHandler.Logout)
